@@ -1,0 +1,276 @@
+@page
+@model project.Pages.Admin.IndexModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Admin Dashboard";
+}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Odyssey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .font-heading { font-family: 'Cormorant Garamond', serif; }
+        .font-body { font-family: 'Montserrat', sans-serif; }
+        
+        .glass-nav {
+            background: rgba(12, 10, 9, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        @@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeInUp {
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+        
+        .delay-100 { animation-delay: 0.1s; opacity: 0; }
+        .delay-200 { animation-delay: 0.2s; opacity: 0; }
+        .delay-300 { animation-delay: 0.3s; opacity: 0; }
+        .delay-400 { animation-delay: 0.4s; opacity: 0; }
+    </style>
+</head>
+<body class="bg-stone-950 text-stone-100 font-body min-h-screen">
+    <!-- Admin Navigation -->
+    <nav class="fixed w-full z-50 glass-nav py-4">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-2xl font-heading font-bold tracking-wider text-white flex items-center gap-2 group">
+                    <i data-lucide="compass" class="w-6 h-6 text-amber-200 group-hover:rotate-45 transition-transform duration-500"></i>
+                    ODYSSEY
+                </a>
+                <span class="text-xs uppercase tracking-wider px-3 py-1 bg-amber-400/20 text-amber-300 rounded-full border border-amber-400/30">
+                    Admin Panel
+                </span>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <a href="/Admin" class="text-amber-200 text-sm flex items-center gap-2">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    Dashboard
+                </a>
+                <a href="/Admin/Packages" class="text-stone-400 hover:text-white text-sm flex items-center gap-2">
+                    <i data-lucide="package" class="w-4 h-4"></i>
+                    Packages
+                </a>
+                <a href="/Admin/Orders" class="text-stone-400 hover:text-white text-sm flex items-center gap-2">
+                    <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+                    Orders
+                </a>
+                <a href="/Admin/Users" class="text-stone-400 hover:text-white text-sm flex items-center gap-2">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    Users
+                </a>
+                <a href="/" class="text-stone-400 hover:text-white text-sm flex items-center gap-2">
+                    <i data-lucide="globe" class="w-4 h-4"></i>
+                    View Site
+                </a>
+                <a href="/Account/Logout" class="text-stone-400 hover:text-white text-sm flex items-center gap-2">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-12 px-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="mb-8 animate-fadeInUp">
+                <h1 class="text-4xl font-heading text-white mb-2">Dashboard</h1>
+                <p class="text-stone-400">Overview of your travel business</p>
+            </div>
+            
+            <!-- Statistics Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card bg-stone-900/50 backdrop-blur-xl rounded-lg border border-white/10 p-6 animate-fadeInUp delay-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-amber-400/20 rounded-lg flex items-center justify-center">
+                            <i data-lucide="dollar-sign" class="w-6 h-6 text-amber-400"></i>
+                        </div>
+                        <span class="text-xs text-green-400 flex items-center gap-1">
+                            <i data-lucide="trending-up" class="w-3 h-3"></i>
+                            +12%
+                        </span>
+                    </div>
+                    <div class="text-3xl font-heading text-white mb-1">$@Model.Stats.TotalRevenue.ToString("N0")</div>
+                    <div class="text-sm text-stone-400">Total Revenue</div>
+                </div>
+                
+                <div class="stat-card bg-stone-900/50 backdrop-blur-xl rounded-lg border border-white/10 p-6 animate-fadeInUp delay-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-blue-400/20 rounded-lg flex items-center justify-center">
+                            <i data-lucide="calendar-check" class="w-6 h-6 text-blue-400"></i>
+                        </div>
+                        <span class="text-xs text-stone-400">This month</span>
+                    </div>
+                    <div class="text-3xl font-heading text-white mb-1">@Model.Stats.TotalBookings</div>
+                    <div class="text-sm text-stone-400">Total Bookings</div>
+                </div>
+                
+                <div class="stat-card bg-stone-900/50 backdrop-blur-xl rounded-lg border border-white/10 p-6 animate-fadeInUp delay-300">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-yellow-400/20 rounded-lg flex items-center justify-center">
+                            <i data-lucide="clock" class="w-6 h-6 text-yellow-400"></i>
+                        </div>
+                        <span class="text-xs text-yellow-400">Needs attention</span>
+                    </div>
+                    <div class="text-3xl font-heading text-white mb-1">@Model.Stats.PendingBookings</div>
+                    <div class="text-sm text-stone-400">Pending Orders</div>
+                </div>
+                
+                <div class="stat-card bg-stone-900/50 backdrop-blur-xl rounded-lg border border-white/10 p-6 animate-fadeInUp delay-400">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-green-400/20 rounded-lg flex items-center justify-center">
+                            <i data-lucide="package" class="w-6 h-6 text-green-400"></i>
+                        </div>
+                        <span class="text-xs text-stone-400">@Model.Stats.ActivePackages active</span>
+                    </div>
+                    <div class="text-3xl font-heading text-white mb-1">@Model.Stats.TotalPackages</div>
+                    <div class="text-sm text-stone-400">Travel Packages</div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions & Recent Orders -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Quick Actions -->
+                <div class="bg-stone-900/50 backdrop-blur-xl rounded-lg border border-white/10 p-6">
+                    <h2 class="text-xl font-heading text-white mb-4 flex items-center gap-2">
+                        <i data-lucide="zap" class="w-5 h-5 text-amber-400"></i>
+                        Quick Actions
+                    </h2>
+                    <div class="space-y-3">
+                        <a href="/Admin/Packages/Create" class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                            <div class="w-10 h-10 bg-pink-400/20 rounded-lg flex items-center justify-center">
+                                <i data-lucide="plus" class="w-5 h-5 text-pink-400"></i>
+                            </div>
+                            <div>
+                                <div class="text-white text-sm font-medium">Add New Package</div>
+                                <div class="text-stone-500 text-xs">Create a new travel destination</div>
+                            </div>
+                        </a>
+                        <a href="/Admin/Orders?status=pending" class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                            <div class="w-10 h-10 bg-yellow-400/20 rounded-lg flex items-center justify-center">
+                                <i data-lucide="clock" class="w-5 h-5 text-yellow-400"></i>
+                            </div>
+                            <div>
+                                <div class="text-white text-sm font-medium">View Pending Orders</div>
+                                <div class="text-stone-500 text-xs">@Model.Stats.PendingBookings orders need review</div>
+                            </div>
+                        </a>
+                        <a href="/Admin/Packages" class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                            <div class="w-10 h-10 bg-cyan-400/20 rounded-lg flex items-center justify-center">
+                                <i data-lucide="settings" class="w-5 h-5 text-cyan-400"></i>
+                            </div>
+                            <div>
+                                <div class="text-white text-sm font-medium">Manage Packages</div>
+                                <div class="text-stone-500 text-xs">Edit prices and availability</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Bookings by Season -->
+                <div class="bg-stone-900/50 backdrop-blur-xl rounded-lg border border-white/10 p-6">
+                    <h2 class="text-xl font-heading text-white mb-4 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-5 h-5 text-amber-400"></i>
+                        Bookings by Season
+                    </h2>
+                    <div class="space-y-4">
+                        @{
+                            var seasonColors = new Dictionary<string, string>
+                            {
+                                { "spring", "bg-pink-400" },
+                                { "summer", "bg-amber-400" },
+                                { "autumn", "bg-orange-400" },
+                                { "winter", "bg-cyan-400" }
+                            };
+                            var totalSeasonBookings = Model.Stats.BookingsBySeason.Values.Sum();
+                        }
+                        @foreach (var season in new[] { "spring", "summer", "autumn", "winter" })
+                        {
+                            var count = Model.Stats.BookingsBySeason.GetValueOrDefault(season, 0);
+                            var percentage = totalSeasonBookings > 0 ? (count * 100 / totalSeasonBookings) : 0;
+                            var colorClass = seasonColors.GetValueOrDefault(season, "bg-stone-400");
+                            
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm text-white capitalize">@season</span>
+                                    <span class="text-sm text-stone-400">@count bookings</span>
+                                </div>
+                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full @colorClass rounded-full transition-all duration-500" style="width: @(percentage)%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                
+                <!-- Recent Orders -->
+                <div class="bg-stone-900/50 backdrop-blur-xl rounded-lg border border-white/10 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-heading text-white flex items-center gap-2">
+                            <i data-lucide="activity" class="w-5 h-5 text-amber-400"></i>
+                            Recent Orders
+                        </h2>
+                        <a href="/Admin/Orders" class="text-amber-200 text-xs hover:text-amber-100">View all ?</a>
+                    </div>
+                    <div class="space-y-3">
+                        @if (!Model.Stats.RecentBookings.Any())
+                        {
+                            <p class="text-stone-500 text-sm text-center py-4">No orders yet</p>
+                        }
+                        else
+                        {
+                            @foreach (var booking in Model.Stats.RecentBookings.Take(5))
+                            {
+                                var statusClass = booking.Status switch
+                                {
+                                    project.Models.BookingStatus.Pending => "bg-yellow-400/20 text-yellow-300",
+                                    project.Models.BookingStatus.Confirmed => "bg-green-400/20 text-green-300",
+                                    project.Models.BookingStatus.Cancelled => "bg-red-400/20 text-red-300",
+                                    _ => "bg-blue-400/20 text-blue-300"
+                                };
+                                
+                                <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <img src="@booking.TravelPackage?.ImageUrl" alt="" class="w-10 h-10 rounded object-cover">
+                                        <div>
+                                            <div class="text-sm text-white">@booking.User?.FirstName @booking.User?.LastName</div>
+                                            <div class="text-xs text-stone-500">@booking.TravelPackage?.Destination</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs px-2 py-1 rounded-full @statusClass">
+                                        @booking.Status
+                                    </span>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

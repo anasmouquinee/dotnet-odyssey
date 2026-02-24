@@ -1,0 +1,16 @@
+## .NET / Visual Studio
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+project/appsettings.Production.json
+
+## EF Core - keep migrations but ignore snapshots if needed
+# project/Migrations/
+
+## OS
+Thumbs.db
+.DS_Store

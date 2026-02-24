@@ -1,0 +1,1278 @@
+﻿@page
+@model IndexModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odyssey | Seasonal Escapes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Typography */
+        .font-heading { font-family: 'Cormorant Garamond', serif; }
+        .font-body { font-family: 'Montserrat', sans-serif; }
+
+        /* Smooth Scroll & Hide Scrollbar */
+        body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Animations */
+        @@keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        
+        @@keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .animate-spin { animation: spin 1s linear infinite; }
+
+        /* Scroll Reveal Classes */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 1s cubic-bezier(0.5, 0, 0, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-nav {
+            background: rgba(12, 10, 9, 0.7); /* Stone-950 with opacity */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Custom Selection */
+        ::selection {
+            background: #d6b88d; /* Gold */
+            color: #1c1917; /* Dark Stone */
+        }
+
+        /* Image Hover Zoom Container */
+        .img-container {
+            overflow: hidden;
+        }
+        .img-container img {
+            transition: transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .group:hover .img-container img {
+            transform: scale(1.1);
+        }
+
+        /* Season Specific Gradients (Dynamic Classes) */
+        .bg-gradient-spring { background-image: linear-gradient(to bottom, rgba(28,25,23,0.8), rgba(80, 7, 36, 0.1), rgba(28,25,23,1)); }
+        .bg-gradient-summer { background-image: linear-gradient(to bottom, rgba(28,25,23,0.8), rgba(120, 53, 15, 0.1), rgba(28,25,23,1)); }
+        .bg-gradient-autumn { background-image: linear-gradient(to bottom, rgba(28,25,23,0.8), rgba(67, 20, 7, 0.1), rgba(28,25,23,1)); }
+        .bg-gradient-winter { background-image: linear-gradient(to bottom, rgba(28,25,23,0.8), rgba(8, 47, 73, 0.1), rgba(28,25,23,1)); }
+        
+        /* Modal Animations */
+        #modalContent {
+            transform: scale(0.95);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #bookingModal.flex #modalContent {
+            transform: scale(1);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-stone-950 text-stone-100 font-body overflow-x-hidden selection:bg-amber-200 selection:text-stone-900">
+
+    <!-- Canvas Background for Hero (Dynamic) -->
+    <canvas id="seasonCanvas" class="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none transition-opacity duration-1000"></canvas>
+    
+    <!-- Background Gradient Overlay (Changes with Theme) -->
+    <div id="bgOverlay" class="fixed inset-0 bg-stone-950 -z-20 transition-all duration-1000"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 transition-all duration-300 py-6" id="navbar">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+            <a href="#home" class="text-3xl font-heading font-bold tracking-wider text-white flex items-center gap-2 group">
+                <i data-lucide="compass" class="w-8 h-8 text-amber-200 group-hover:rotate-45 transition-transform duration-500"></i>
+                ODYSSEY
+            </a>
+            
+            <div class="hidden md:flex items-center space-x-8 text-xs tracking-[0.2em] uppercase font-medium">
+                <a href="#spring" class="hover:text-pink-300 transition-colors duration-300">Spring</a>
+                <a href="#summer" class="hover:text-amber-300 transition-colors duration-300">Summer</a>
+                <a href="#autumn" class="hover:text-orange-300 transition-colors duration-300">Autumn</a>
+                <a href="#winter" class="hover:text-cyan-300 transition-colors duration-300">Winter</a>
+                
+                @if (Model.IsAuthenticated)
+                {
+                    @if (Model.IsAdmin)
+                    {
+                        <a href="/Admin" class="hover:text-amber-200 transition-colors duration-300 flex items-center gap-1 px-3 py-1 bg-amber-400/20 rounded-full border border-amber-400/30">
+                            <i data-lucide="shield" class="w-4 h-4 text-amber-300"></i>
+                            <span class="text-amber-300">Admin</span>
+                        </a>
+                    }
+                    <a href="/Cart" class="relative hover:text-amber-200 transition-colors duration-300 flex items-center gap-1">
+                        <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+                        Cart
+                        @if (Model.CartCount > 0)
+                        {
+                            <span class="absolute -top-2 -right-2 bg-amber-400 text-stone-900 text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                                @Model.CartCount
+                            </span>
+                        }
+                    </a>
+                    <a href="/Bookings" class="hover:text-amber-200 transition-colors duration-300">My Trips</a>
+                    <div class="flex items-center gap-3">
+                        <a href="/Profile" class="text-stone-400 hover:text-amber-200 transition-colors duration-300 flex items-center gap-2 group">
+                            <i data-lucide="user" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
+                            <span>@Model.UserName</span>
+                        </a>
+                        <a href="/Account/Logout" class="px-4 py-2 border border-white/20 rounded-full hover:bg-white hover:text-stone-900 transition-all duration-300">Logout</a>
+                    </div>
+                }
+                else
+                {
+                    <a href="/Account/Login" class="hover:text-amber-200 transition-colors duration-300">Login</a>
+                    <a href="/Account/Register" class="px-6 py-2 bg-amber-200 text-stone-900 rounded-full hover:bg-amber-100 transition-all duration-300 font-semibold">Sign Up</a>
+                }
+            </div>
+
+            <button class="md:hidden text-white hover:text-amber-200" id="mobileMenuBtn">
+                <i data-lucide="menu"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="fixed inset-0 z-40 bg-stone-950 flex flex-col items-center justify-center gap-6 transform -translate-y-full transition-transform duration-500 ease-in-out md:hidden">
+        <button class="absolute top-8 right-8 text-white/50 hover:text-white" id="closeMenuBtn"><i data-lucide="x" class="w-8 h-8"></i></button>
+        <a href="#spring" class="text-3xl font-heading text-pink-200" onclick="toggleMenu()">Spring</a>
+        <a href="#summer" class="text-3xl font-heading text-amber-200" onclick="toggleMenu()">Summer</a>
+        <a href="#autumn" class="text-3xl font-heading text-orange-200" onclick="toggleMenu()">Autumn</a>
+        <a href="#winter" class="text-3xl font-heading text-cyan-200" onclick="toggleMenu()">Winter</a>
+        <div class="w-24 h-px bg-white/20 my-2"></div>
+        @if (Model.IsAuthenticated)
+        {
+            <a href="/Cart" class="text-xl text-white" onclick="toggleMenu()">My Cart (@Model.CartCount)</a>
+            <a href="/Bookings" class="text-xl text-white" onclick="toggleMenu()">My Bookings</a>
+            <a href="/Profile" class="text-xl text-amber-200 flex items-center gap-2" onclick="toggleMenu()">
+                <i data-lucide="user" class="w-5 h-5"></i>
+                @Model.UserName
+            </a>
+            <a href="/Account/Logout" class="text-xl text-stone-400">Logout</a>
+        }
+        else
+        {
+            <a href="/Account/Login" class="text-xl text-white" onclick="toggleMenu()">Login</a>
+            <a href="/Account/Register" class="text-xl text-amber-200" onclick="toggleMenu()">Sign Up</a>
+        }
+    </div>
+
+    <!-- Hero Section -->
+    <section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden px-4" data-season="intro">
+        <div class="text-center z-10 relative w-full max-w-5xl">
+            <div class="overflow-hidden">
+                <h2 class="text-sm md:text-base font-medium tracking-[0.4em] text-stone-400 uppercase mb-4 reveal active">
+                    A Journey for Every Season
+                </h2>
+            </div>
+            
+            <h1 class="text-6xl md:text-8xl lg:text-9xl font-heading font-thin mb-8 tracking-tight text-white reveal active" style="transition-delay: 200ms;">
+                Chasing <span id="heroDynamicText" class="italic font-light text-amber-100 transition-colors duration-1000">Time</span>
+            </h1>
+            
+            <p class="text-lg md:text-xl font-light max-w-xl mx-auto text-stone-300 mb-12 leading-relaxed reveal active" style="transition-delay: 400ms;">
+                Scroll to explore our curated collections, timed perfectly to nature's most spectacular performances.
+            </p>
+
+            <div class="flex flex-col md:flex-row justify-center gap-6 reveal active" style="transition-delay: 600ms;">
+                <a href="#spring" class="px-8 py-4 bg-white text-stone-900 rounded-sm font-medium tracking-widest uppercase text-xs hover:bg-amber-100 transition-colors">
+                    Start the Journey
+                </a>
+            </div>
+        </div>
+        
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce">
+            <span class="text-[10px] uppercase tracking-widest">Scroll</span>
+            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+        </div>
+    </section>
+
+    <!-- SECTION 1: SPRING -->
+    <section id="spring" class="relative py-32 px-6 border-t border-white/5 min-h-screen flex items-center" data-season="spring">
+        <div class="max-w-7xl mx-auto w-full">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-16 reveal">
+                <div>
+                    <span class="text-pink-300 text-xs tracking-[0.3em] uppercase block mb-3 flex items-center gap-2"><i data-lucide="flower-2" class="w-4 h-4"></i> Rebirth</span>
+                    <h2 class="text-4xl md:text-6xl font-heading text-white">Spring Awakening</h2>
+                </div>
+                <div class="mt-6 md:mt-0">
+                    <p class="text-stone-400 max-w-sm text-sm leading-7">Fleeting moments of color. Witness the world waking up in a symphony of petals and fresh breezes.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @{ var springPackages = Model.TravelPackages.Where(p => p.Season == "spring").ToList(); var springIndex = 0; }
+                @foreach (var package in springPackages)
+                {
+                    var delayClass = springIndex == 0 ? "delay-100" : springIndex == 1 ? "delay-200 lg:translate-y-12" : "delay-300";
+                    var dateStr = $"{package.DefaultStartDate:MMM d} - {package.DefaultEndDate:MMM d, yyyy}";
+                    <div class="group cursor-pointer reveal @delayClass" 
+                         onclick="openBookingModal('@package.Destination.Replace("'", "\\'")', '@package.Description.Replace("'", "\\'")', '$@package.Price.ToString("N0")', '@dateStr', 'spring', '@package.ImageUrl', @package.Id)">
+                        <div class="img-container relative h-[500px] w-full mb-6 overflow-hidden rounded-sm">
+                            <img src="@package.ImageUrl" alt="@package.Destination" class="w-full h-full object-cover">
+                            <div class="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-3 py-1 text-xs text-white uppercase tracking-wider border border-white/20">@dateStr</div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
+                            <div class="absolute bottom-4 right-4 bg-pink-400/80 backdrop-blur-sm px-4 py-2 rounded-full text-white text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                                Book Now
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-2xl font-heading text-white group-hover:text-pink-300 transition-colors">@package.Destination</h3>
+                                <p class="text-stone-500 text-sm mt-1">@package.Description</p>
+                            </div>
+                            <span class="text-pink-200/50 text-sm font-medium">$@package.Price.ToString("N0")</span>
+                        </div>
+                    </div>
+                    springIndex++;
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2: SUMMER -->
+    <section id="summer" class="relative py-32 px-6 border-t border-white/5 min-h-screen flex items-center" data-season="summer">
+        <div class="max-w-7xl mx-auto w-full">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-16 reveal">
+                <div>
+                    <span class="text-amber-300 text-xs tracking-[0.3em] uppercase block mb-3 flex items-center gap-2"><i data-lucide="sun" class="w-4 h-4"></i> Radiance</span>
+                    <h2 class="text-4xl md:text-6xl font-heading text-white">Golden Hours</h2>
+                </div>
+                <div class="mt-6 md:mt-0">
+                    <p class="text-stone-400 max-w-sm text-sm leading-7">Long days and warm nights. Bask in the glow of the world's most stunning coastal retreats.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @{ var summerPackages = Model.TravelPackages.Where(p => p.Season == "summer").ToList(); var summerIndex = 0; }
+                @foreach (var package in summerPackages)
+                {
+                    var delayClass = summerIndex == 0 ? "delay-100" : summerIndex == 1 ? "delay-200 lg:translate-y-12" : "delay-300";
+                    var dateStr = $"{package.DefaultStartDate:MMM d} - {package.DefaultEndDate:MMM d, yyyy}";
+                    <div class="group cursor-pointer reveal @delayClass" 
+                         onclick="openBookingModal('@package.Destination.Replace("'", "\\'")', '@package.Description.Replace("'", "\\'")', '$@package.Price.ToString("N0")', '@dateStr', 'summer', '@package.ImageUrl', @package.Id)">
+                        <div class="img-container relative h-[500px] w-full mb-6 overflow-hidden rounded-sm">
+                            <img src="@package.ImageUrl" alt="@package.Destination" class="w-full h-full object-cover">
+                            <div class="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-3 py-1 text-xs text-white uppercase tracking-wider border border-white/20">@dateStr</div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
+                            <div class="absolute bottom-4 right-4 bg-amber-400/80 backdrop-blur-sm px-4 py-2 rounded-full text-stone-900 text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                                Book Now
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-2xl font-heading text-white group-hover:text-amber-300 transition-colors">@package.Destination</h3>
+                                <p class="text-stone-500 text-sm mt-1">@package.Description</p>
+                            </div>
+                            <span class="text-amber-200/50 text-sm font-medium">$@package.Price.ToString("N0")</span>
+                        </div>
+                    </div>
+                    summerIndex++;
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 3: AUTUMN -->
+    <section id="autumn" class="relative py-32 px-6 border-t border-white/5 min-h-screen flex items-center" data-season="autumn">
+        <div class="max-w-7xl mx-auto w-full">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-16 reveal">
+                <div>
+                    <span class="text-orange-300 text-xs tracking-[0.3em] uppercase block mb-3 flex items-center gap-2"><i data-lucide="leaf" class="w-4 h-4"></i> Transformation</span>
+                    <h2 class="text-4xl md:text-6xl font-heading text-white">Autumnal Gold</h2>
+                </div>
+                <div class="mt-6 md:mt-0">
+                    <p class="text-stone-400 max-w-sm text-sm leading-7">The earth takes a deep breath. Crisp air, harvest feasts, and landscapes painted in fire and copper.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @{ var autumnPackages = Model.TravelPackages.Where(p => p.Season == "autumn").ToList(); var autumnIndex = 0; }
+                @foreach (var package in autumnPackages)
+                {
+                    var delayClass = autumnIndex == 0 ? "delay-100" : autumnIndex == 1 ? "delay-200 lg:translate-y-12" : "delay-300";
+                    var dateStr = $"{package.DefaultStartDate:MMM d} - {package.DefaultEndDate:MMM d, yyyy}";
+                    <div class="group cursor-pointer reveal @delayClass" 
+                         onclick="openBookingModal('@package.Destination.Replace("'", "\\'")', '@package.Description.Replace("'", "\\'")', '$@package.Price.ToString("N0")', '@dateStr', 'autumn', '@package.ImageUrl', @package.Id)">
+                        <div class="img-container relative h-[500px] w-full mb-6 overflow-hidden rounded-sm">
+                            <img src="@package.ImageUrl" alt="@package.Destination" class="w-full h-full object-cover">
+                            <div class="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-3 py-1 text-xs text-white uppercase tracking-wider border border-white/20">@dateStr</div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
+                            <div class="absolute bottom-4 right-4 bg-orange-400/80 backdrop-blur-sm px-4 py-2 rounded-full text-white text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                                Book Now
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-2xl font-heading text-white group-hover:text-orange-300 transition-colors">@package.Destination</h3>
+                                <p class="text-stone-500 text-sm mt-1">@package.Description</p>
+                            </div>
+                            <span class="text-orange-200/50 text-sm font-medium">$@package.Price.ToString("N0")</span>
+                        </div>
+                    </div>
+                    autumnIndex++;
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 4: WINTER -->
+    <section id="winter" class="relative py-32 px-6 border-t border-white/5 min-h-screen flex items-center" data-season="winter">
+        <div class="max-w-7xl mx-auto w-full">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-16 reveal">
+                <div>
+                    <span class="text-cyan-300 text-xs tracking-[0.3em] uppercase block mb-3 flex items-center gap-2"><i data-lucide="snowflake" class="w-4 h-4"></i> Silence</span>
+                    <h2 class="text-4xl md:text-6xl font-heading text-white">Arctic Wonder</h2>
+                </div>
+                <div class="mt-6 md:mt-0">
+                    <p class="text-stone-400 max-w-sm text-sm leading-7">Pure white landscapes and dancing auroras. Find warmth in the coldest places on earth.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @{ var winterPackages = Model.TravelPackages.Where(p => p.Season == "winter").ToList(); var winterIndex = 0; }
+                @foreach (var package in winterPackages)
+                {
+                    var delayClass = winterIndex == 0 ? "delay-100" : winterIndex == 1 ? "delay-200 lg:translate-y-12" : "delay-300";
+                    var dateStr = $"{package.DefaultStartDate:MMM d} - {package.DefaultEndDate:MMM d, yyyy}";
+                    <div class="group cursor-pointer reveal @delayClass" 
+                         onclick="openBookingModal('@package.Destination.Replace("'", "\\'")', '@package.Description.Replace("'", "\\'")', '$@package.Price.ToString("N0")', '@dateStr', 'winter', '@package.ImageUrl', @package.Id)">
+                        <div class="img-container relative h-[500px] w-full mb-6 overflow-hidden rounded-sm">
+                            <img src="@package.ImageUrl" alt="@package.Destination" class="w-full h-full object-cover">
+                            <div class="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-3 py-1 text-xs text-white uppercase tracking-wider border border-white/20">@dateStr</div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
+                            <div class="absolute bottom-4 right-4 bg-cyan-400/80 backdrop-blur-sm px-4 py-2 rounded-full text-stone-900 text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                                Book Now
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-2xl font-heading text-white group-hover:text-cyan-300 transition-colors">@package.Destination</h3>
+                                <p class="text-stone-500 text-sm mt-1">@package.Description</p>
+                            </div>
+                            <span class="text-cyan-200/50 text-sm font-medium">$@package.Price.ToString("N0")</span>
+                        </div>
+                    </div>
+                    winterIndex++;
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" style="background: rgba(0,0,0,0.9);">
+        <!-- Modal Background Image -->
+        <div id="modalBackground" class="absolute inset-0 transition-opacity duration-700" style="opacity: 0;">
+            <img id="modalBackgroundImage" src="" alt="" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-black/40"></div>
+        </div>
+        
+        <!-- Modal Particle Canvas -->
+        <canvas id="modalCanvas" class="absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-700" style="opacity: 0;"></canvas>
+        
+        <!-- Modal Content -->
+        <div class="relative bg-stone-900/95 backdrop-blur-xl max-w-2xl w-full rounded-lg shadow-2xl border border-white/20 overflow-hidden transform transition-all" id="modalContent" style="transform: scale(0.9); opacity: 0;">
+            <!-- Modal Header -->
+            <div class="relative p-8 border-b border-white/10">
+                <button onclick="closeBookingModal()" class="absolute top-4 right-4 bg-white/10 backdrop-blur-md hover:bg-white/20 rounded-full p-2 transition-colors z-10">
+                    <i data-lucide="x" class="w-5 h-5 text-white"></i>
+                </button>
+                
+                <div class="flex items-center gap-2 mb-3">
+                    <span id="modalSeasonBadge" class="text-xs uppercase tracking-wider px-3 py-1 rounded-full"></span>
+                    <span id="modalDates" class="text-xs text-stone-400 flex items-center gap-1">
+                        <i data-lucide="calendar" class="w-3 h-3"></i>
+                        <span id="modalDatesText"></span>
+                    </span>
+                </div>
+                <h3 id="modalTitle" class="text-4xl font-heading text-white mb-2"></h3>
+                <p id="modalSubtitle" class="text-stone-400 flex items-center gap-2">
+                    <i data-lucide="map-pin" class="w-4 h-4"></i>
+                    <span id="modalSubtitleText"></span>
+                </p>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-8 max-h-[70vh] overflow-y-auto">
+                <div class="mb-6 pb-6 border-b border-white/10">
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <span class="text-stone-400 text-xs uppercase tracking-wider block mb-1">Starting from</span>
+                            <span id="modalPrice" class="text-5xl font-heading text-white"></span>
+                            <span class="text-stone-400 text-sm ml-2">per person</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-stone-400 text-xs uppercase tracking-wider block mb-1">Duration</span>
+                            <span class="text-white text-lg font-medium" id="modalDuration"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="bookingForm" onsubmit="handleBooking(event)" class="space-y-4">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="modalPackageId" name="packageId" value="">
+                    
+                    <!-- Date Selection with Calendar -->
+                    <div class="bg-stone-800/50 rounded-lg p-4 mb-4">
+                        <h4 class="text-sm font-medium text-white mb-3 flex items-center gap-2">
+                            <i data-lucide="calendar" class="w-4 h-4 text-amber-200"></i>
+                            Select Your Travel Dates
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">Start Date *</label>
+                                <input type="date" id="startDate" name="startDate" required 
+                                       class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded focus:border-amber-400 focus:bg-white/10 outline-none text-white transition-all"
+                                       onchange="updateEndDate()">
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">End Date *</label>
+                                <input type="date" id="endDate" name="endDate" required 
+                                       class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded focus:border-amber-400 focus:bg-white/10 outline-none text-white transition-all"
+                                       onchange="updateDurationAndPrice()">
+                            </div>
+                        </div>
+                        <p class="text-stone-500 text-xs mt-2">
+                            <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                            You can customize your travel dates based on your availability
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">Number of Guests *</label>
+                        <select id="guestsCount" name="guests" required class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded focus:border-amber-400 focus:bg-white/10 outline-none text-white transition-all" onchange="updateTotalPrice()">
+                            <option value="">Select number of guests</option>
+                            <option value="1">1 Guest</option>
+                            <option value="2">2 Guests</option>
+                            <option value="3">3 Guests</option>
+                            <option value="4">4 Guests</option>
+                            <option value="5">5 Guests</option>
+                            <option value="6">6 Guests</option>
+                            <option value="7">7 Guests</option>
+                            <option value="8">8 Guests</option>
+                            <option value="9">9 Guests</option>
+                            <option value="10">10 Guests</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">Special Requests (Optional)</label>
+                        <textarea id="specialRequests" name="specialRequests" rows="3" class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded focus:border-amber-400 focus:bg-white/10 outline-none text-white transition-all resize-none placeholder:text-stone-600" placeholder="Any special requirements or preferences..."></textarea>
+                    </div>
+                    
+                    <!-- Price Summary -->
+                    <div class="bg-stone-800/50 rounded-lg p-4">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-stone-400">Price per person</span>
+                            <span class="text-white" id="pricePerPerson">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm mt-2">
+                            <span class="text-stone-400">Number of guests</span>
+                            <span class="text-white" id="guestsDisplay">0</span>
+                        </div>
+                        <div class="border-t border-white/10 mt-3 pt-3 flex justify-between items-center">
+                            <span class="text-white font-medium">Total Price</span>
+                            <span class="text-2xl font-heading text-amber-200" id="totalPrice">$0</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 pt-4">
+                        <button type="button" onclick="closeBookingModal()" class="flex-1 px-6 py-3 border border-white/30 rounded text-white hover:bg-white/10 transition-all font-medium tracking-wide">
+                            Cancel
+                        </button>
+                        @if (Model.IsAuthenticated)
+                        {
+                            <button type="submit" class="flex-1 px-6 py-3 bg-amber-200 hover:bg-amber-100 rounded text-stone-900 font-bold tracking-wide transition-all shadow-lg hover:shadow-amber-200/20">
+                                <i data-lucide="shopping-bag" class="w-4 h-4 inline mr-2"></i>
+                                Add to Cart
+                            </button>
+                        }
+                        else
+                        {
+                            <a href="/Account/Login" class="flex-1 px-6 py-3 bg-amber-200 hover:bg-amber-100 rounded text-stone-900 font-bold tracking-wide transition-all shadow-lg hover:shadow-amber-200/20 text-center">
+                                Login to Book
+                            </a>
+                        }
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // --- PARTICLE SYSTEM CONFIGURATION ---
+        const canvas = document.getElementById('seasonCanvas');
+        const ctx = canvas.getContext('2d');
+        const heroDynamicText = document.getElementById('heroDynamicText');
+        const bgOverlay = document.getElementById('bgOverlay');
+
+        let width, height;
+        let particles = [];
+        let mouse = { x: -1000, y: -1000 };
+        
+        // Configuration for each season
+        const seasonConfig = {
+            intro: {
+                color: ['#e7e5e4', '#a8a29e'], // Stone
+                speedY: { min: 0.1, max: 0.5 },
+                speedX: { min: -0.2, max: 0.2 },
+                size: { min: 1, max: 3 },
+                count: 50,
+                type: 'snow', // Subtle dust
+                titleText: 'Time',
+                titleColor: 'text-amber-100',
+                bgGradient: 'bg-stone-950',
+                gravity: 0.01
+            },
+            spring: {
+                color: ['#FBCFE8', '#F472B6', '#F9A8D4'], // Pinks
+                speedY: { min: 0.5, max: 1.5 },
+                speedX: { min: -1, max: 1 },
+                size: { min: 3, max: 8 },
+                count: 100,
+                type: 'petal',
+                titleText: 'Blossoms',
+                titleColor: 'text-pink-200',
+                bgGradient: 'bg-gradient-spring',
+                gravity: 0.05
+            },
+            summer: {
+                color: ['#FCD34D', '#F59E0B', '#FFFBEB'], // Golds/Yellows
+                speedY: { min: -0.5, max: 0.5 }, // Float around
+                speedX: { min: -0.5, max: 0.5 },
+                size: { min: 2, max: 5 },
+                count: 150,
+                type: 'firefly',
+                titleText: 'Radiance',
+                titleColor: 'text-amber-200',
+                bgGradient: 'bg-gradient-summer',
+                gravity: 0 // No gravity for fireflies
+            },
+            autumn: {
+                color: ['#F97316', '#EA580C', '#d6b88d'], // Oranges/Rust
+                speedY: { min: 1, max: 2.5 },
+                speedX: { min: -2, max: 2 },
+                size: { min: 4, max: 9 },
+                count: 80,
+                type: 'leaf',
+                titleText: 'Gold',
+                titleColor: 'text-orange-200',
+                bgGradient: 'bg-gradient-autumn',
+                gravity: 0.08
+            },
+            winter: {
+                color: ['#FFFFFF', '#CFFAFE', '#A5F3FC'], // White/Cyan
+                speedY: { min: 1, max: 3 },
+                speedX: { min: -0.5, max: 0.5 },
+                size: { min: 8, max: 16 },
+                count: 150,
+                type: 'snow',
+                titleText: 'Silence',
+                titleColor: 'text-cyan-200',
+                bgGradient: 'bg-gradient-winter',
+                gravity: 0.02
+            }
+        };
+
+        let currentSeason = 'intro';
+
+        // Particle Class
+        class Particle {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                const config = seasonConfig[currentSeason];
+                this.x = Math.random() * width;
+                this.y = Math.random() * height - height; // Start above
+                
+                // For fireflies or intro dust, spawn everywhere
+                if(config.type === 'firefly' || config.type === 'snow') this.y = Math.random() * height;
+
+                this.size = Math.random() * (config.size.max - config.size.min) + config.size.min;
+                this.speedY = Math.random() * (config.speedY.max - config.speedY.min) + config.speedY.min;
+                this.speedX = Math.random() * (config.speedX.max - config.speedX.min) + config.speedX.min;
+                this.color = config.color[Math.floor(Math.random() * config.color.length)];
+                this.angle = Math.random() * 360;
+                this.spin = Math.random() * 2 - 1;
+                this.opacity = Math.random() * 0.5 + 0.3;
+                
+                // Pulse for fireflies
+                this.pulse = Math.random() * 0.05;
+                this.pulseDir = 1;
+            }
+
+            update() {
+                const config = seasonConfig[currentSeason];
+
+                // Movement
+                this.y += this.speedY;
+                this.x += this.speedX + Math.sin(this.angle * Math.PI / 180) * 0.5;
+                this.angle += this.spin;
+
+                // Firefly erratic behavior
+                if (config.type === 'firefly') {
+                    this.speedX += (Math.random() - 0.5) * 0.1;
+                    this.speedY += (Math.random() - 0.5) * 0.1;
+                    // Keep opacity pulsing
+                    this.opacity += this.pulse * this.pulseDir;
+                    if(this.opacity > 0.8 || this.opacity < 0.2) this.pulseDir *= -1;
+                }
+
+                // Mouse Interaction (Wind)
+                const dx = this.x - mouse.x;
+                const dy = this.y - mouse.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                const maxDist = 150;
+
+                if (dist < maxDist) {
+                    const force = (maxDist - dist) / maxDist;
+                    const angle = Math.atan2(dy, dx);
+                    this.x += Math.cos(angle) * force * 5;
+                    this.y += Math.sin(angle) * force * 5;
+                }
+
+                // Reset logic
+                if (this.y > height + 10 || this.x > width + 10 || this.x < -10 || this.y < -20) {
+                    if(config.type !== 'firefly' || (this.x < -10 || this.x > width + 10 || this.y < -10 || this.y > height + 10)) {
+                        this.init();
+                        if (config.type !== 'firefly') this.y = -10;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle * Math.PI / 180);
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.color;
+                
+                const type = seasonConfig[currentSeason].type;
+
+                ctx.beginPath();
+                if (type === 'petal') {
+                    ctx.ellipse(0, 0, this.size, this.size / 2, 0, 0, Math.PI * 2);
+                } else if (type === 'snow') {
+                    // Draw snowflake shape
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = 1;
+                    ctx.lineCap = 'round';
+                    
+                    for (let i = 0; i < 6; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(0, this.size);
+                        ctx.stroke();
+                        
+                        // Branches
+                        ctx.beginPath();
+                        ctx.moveTo(0, this.size * 0.4);
+                        ctx.lineTo(this.size * 0.3, this.size * 0.6);
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(0, this.size * 0.4);
+                        ctx.lineTo(-this.size * 0.3, this.size * 0.6);
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(0, this.size * 0.7);
+                        ctx.lineTo(this.size * 0.2, this.size * 0.85);
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(0, this.size * 0.7);
+                        ctx.lineTo(-this.size * 0.2, this.size * 0.85);
+                        ctx.stroke();
+
+                        ctx.rotate(Math.PI / 3);
+                    }
+                    // Skip fill for snowflake as it is stroked
+                    ctx.restore();
+                    return;
+                } else if (type === 'firefly') {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = this.color;
+                    ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+                } else if (type === 'leaf') {
+                    ctx.moveTo(0, -this.size);
+                    ctx.quadraticCurveTo(this.size, 0, 0, this.size);
+                    ctx.quadraticCurveTo(-this.size, 0, 0, -this.size);
+                }
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function initCanvas() {
+            resizeCanvas();
+            createParticles();
+            animate();
+        }
+
+        function createParticles() {
+            particles = [];
+            const count = seasonConfig[currentSeason].count;
+            for (let i = 0; i < count; i++) {
+                const p = new Particle();
+                p.y = Math.random() * height; // Distribute initially
+                particles.push(p);
+            }
+        }
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        // SCROLL DRIVEN SEASON SWITCHER
+        function setSeason(season) {
+            if(currentSeason === season) return;
+            currentSeason = season;
+            const config = seasonConfig[season];
+            
+            // Update Background Gradient
+            bgOverlay.className = `fixed inset-0 -z-20 transition-all duration-1000 ${config.bgGradient}`;
+
+            // Update Hero Text (only if visible really, but ok to update always)
+            // Clean up old classes
+            heroDynamicText.className = `italic font-light transition-colors duration-1000 ${config.titleColor}`;
+            heroDynamicText.innerHTML = config.titleText;
+
+            // Reset particles slightly to morph them
+            createParticles();
+        };
+
+        // Event Listeners
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        window.addEventListener('mouseout', () => {
+            mouse.x = -1000;
+            mouse.y = -1000;
+        });
+
+        initCanvas();
+
+
+        // --- UI INTERACTION & SCROLL ---
+        
+        // Navbar Glass Effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('glass-nav');
+                navbar.classList.remove('py-6');
+                navbar.classList.add('py-4');
+            } else {
+                navbar.classList.remove('glass-nav');
+                navbar.classList.remove('py-4');
+                navbar.classList.add('py-6');
+            }
+        });
+
+        // Scroll Reveal Observer
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        // Season Section Observer (Triggers Animation Change)
+        const seasonObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const season = entry.target.dataset.season;
+                    if(season) {
+                        setSeason(season);
+                    }
+                }
+            });
+        }, { threshold: 0.51 }); // Trigger when section is mostly visible
+
+        document.querySelectorAll('section[data-season]').forEach(el => seasonObserver.observe(el));
+
+        // Mobile Menu
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeMenuBtn = document.getElementById('closeMenuBtn');
+
+        function toggleMenu() {
+            mobileMenu.classList.toggle('-translate-y-full');
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMenu);
+        closeMenuBtn.addEventListener('click', toggleMenu);
+
+        // --- BOOKING MODAL FUNCTIONS ---
+        let modalParticles = [];
+        let modalAnimationFrame = null;
+        const modalCanvas = document.getElementById('modalCanvas');
+        const modalCtx = modalCanvas ? modalCanvas.getContext('2d') : null;
+        let currentPackagePrice = 0;
+        let currentPackageId = 0;
+
+        function openBookingModal(destination, description, price, dates, season, imageUrl, packageId) {
+            const modal = document.getElementById('bookingModal');
+            const modalContent = document.getElementById('modalContent');
+            const modalBackground = document.getElementById('modalBackground');
+            const modalBackgroundImage = document.getElementById('modalBackgroundImage');
+            
+            // Parse price
+            const priceNum = parseFloat(price.replace('$', '').replace(',', ''));
+            currentPackagePrice = priceNum;
+            currentPackageId = packageId || 0;
+            
+            // Set modal content
+            document.getElementById('modalTitle').textContent = destination;
+            document.getElementById('modalSubtitleText').textContent = description;
+            document.getElementById('modalPrice').textContent = price;
+            document.getElementById('modalDatesText').textContent = dates;
+            document.getElementById('modalPackageId').value = packageId || '';
+            document.getElementById('pricePerPerson').textContent = price;
+            
+            // Calculate duration from dates and set date inputs
+            const dateRange = dates.split(' - ');
+            if (dateRange.length === 2) {
+                const startParts = dateRange[0].split(' ');
+                const endParts = dateRange[1].split(' ');
+                
+                const months = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 
+                                 'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
+                
+                const startMonth = months[startParts[0]] || '01';
+                const startDay = startParts[1].padStart(2, '0');
+                const endMonth = months[endParts[0]] || '01';
+                const endDay = endParts[1].replace(',', '').padStart(2, '0');
+                const year = endParts[2] || '2025';
+                
+                const startDateStr = `${year}-${startMonth}-${startDay}`;
+                const endDateStr = `${year}-${endMonth}-${endDay}`;
+                
+                document.getElementById('startDate').value = startDateStr;
+                document.getElementById('endDate').value = endDateStr;
+                document.getElementById('startDate').min = new Date().toISOString().split('T')[0];
+                
+                const start = new Date(startDateStr);
+                const end = new Date(endDateStr);
+                const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                document.getElementById('modalDuration').textContent = days > 0 ? `${days} days` : '14 days';
+            }
+            
+            // Reset form
+            document.getElementById('guestsCount').value = '';
+            document.getElementById('specialRequests').value = '';
+            document.getElementById('guestsDisplay').textContent = '0';
+            document.getElementById('totalPrice').textContent = '$0';
+            
+            // Set background image
+            modalBackgroundImage.src = imageUrl;
+            
+            // Set season badge with appropriate color
+            const seasonBadge = document.getElementById('modalSeasonBadge');
+            seasonBadge.textContent = season.toUpperCase();
+            
+            // Apply season-specific styling
+            const seasonColors = {
+                spring: 'bg-pink-400/30 text-pink-200 border border-pink-400/50',
+                summer: 'bg-amber-400/30 text-amber-200 border border-amber-400/50',
+                autumn: 'bg-orange-400/30 text-orange-200 border border-orange-400/50',
+                winter: 'bg-cyan-400/30 text-cyan-200 border border-cyan-400/50'
+            };
+            
+            seasonBadge.className = `text-xs uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-sm ${seasonColors[season]}`;
+            
+            // Show modal with animation
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Animate modal content
+            setTimeout(() => {
+                modalBackground.style.opacity = '1';
+                modalCanvas.style.opacity = '1';
+                modalContent.style.transform = 'scale(1)';
+                modalContent.style.opacity = '1';
+            }, 10);
+            
+            // Initialize modal canvas particles
+            initModalCanvas(season);
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+            
+            // Reinitialize icons in modal
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        function closeBookingModal() {
+            const modal = document.getElementById('bookingModal');
+            const modalContent = document.getElementById('modalContent');
+            const modalBackground = document.getElementById('modalBackground');
+            
+            // Hide with animation
+            modalContent.style.transform = 'scale(0.9)';
+            modalContent.style.opacity = '0';
+            modalBackground.style.opacity = '0';
+            modalCanvas.style.opacity = '0';
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                modalContent.style.transform = 'scale(1)';
+                
+                // Stop modal animation
+                if (modalAnimationFrame) {
+                    cancelAnimationFrame(modalAnimationFrame);
+                    modalAnimationFrame = null;
+                }
+                modalParticles = [];
+            }, 300);
+            
+            // Restore body scroll
+            document.body.style.overflow = 'auto';
+        }
+
+        function handleBooking(event) {
+            event.preventDefault();
+            
+            const packageId = document.getElementById('modalPackageId').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const guests = document.getElementById('guestsCount').value;
+            const specialRequests = document.getElementById('specialRequests').value;
+            
+            if (!packageId || !startDate || !endDate || !guests) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Get the antiforgery token
+            const form = document.getElementById('bookingForm');
+            const antiforgeryToken = form.querySelector('input[name="__RequestVerificationToken"]');
+            
+            // Send to server via fetch
+            const formData = new FormData();
+            formData.append('packageId', packageId);
+            formData.append('startDate', startDate);
+            formData.append('endDate', endDate);
+            formData.append('guests', guests);
+            formData.append('specialRequests', specialRequests);
+            
+            if (antiforgeryToken) {
+                formData.append('__RequestVerificationToken', antiforgeryToken.value);
+            }
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 inline mr-2 animate-spin"></i> Adding...';
+            lucide.createIcons();
+            
+            fetch('/Api/AddToCart', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': antiforgeryToken ? antiforgeryToken.value : ''
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Reset button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                lucide.createIcons();
+                
+                if (data.success) {
+                    // Update cart count in nav
+                    const cartBadges = document.querySelectorAll('[data-cart-count]');
+                    cartBadges.forEach(badge => {
+                        badge.textContent = data.cartCount;
+                        badge.style.display = data.cartCount > 0 ? 'flex' : 'none';
+                    });
+                    
+                    // Show success message
+                    const destination = document.getElementById('modalTitle').textContent;
+                    showNotification(`${destination} added to your cart!`, 'success');
+                    
+                    // Close modal
+                    closeBookingModal();
+                    
+                    // Refresh page to update cart count
+                    setTimeout(() => location.reload(), 1000);
+                } else if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    showNotification(data.message || 'An error occurred', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                lucide.createIcons();
+                showNotification('An error occurred. Please try again.', 'error');
+            });
+        }
+        
+        function updateEndDate() {
+            const startDate = document.getElementById('startDate').value;
+            const endDateInput = document.getElementById('endDate');
+            if (startDate) {
+                endDateInput.min = startDate;
+                if (endDateInput.value && endDateInput.value < startDate) {
+                    // Set end date to start date + 7 days
+                    const start = new Date(startDate);
+                    start.setDate(start.getDate() + 7);
+                    endDateInput.value = start.toISOString().split('T')[0];
+                }
+            }
+            // Update duration and total price when dates change
+            updateDurationAndPrice();
+        }
+        
+        function updateDurationAndPrice() {
+            const startDateStr = document.getElementById('startDate').value;
+            const endDateStr = document.getElementById('endDate').value;
+            const durationElement = document.getElementById('modalDuration');
+            
+            if (startDateStr && endDateStr) {
+                const startDate = new Date(startDateStr);
+                const endDate = new Date(endDateStr);
+                const diffTime = Math.abs(endDate - startDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays >= 0) {
+                    durationElement.textContent = diffDays + (diffDays === 1 ? ' day' : ' days');
+                    
+                    // Update total price based on duration and guests
+                    updateTotalPrice();
+                }
+            }
+        }
+        
+        function updateTotalPrice() {
+            const guests = parseInt(document.getElementById('guestsCount').value) || 0;
+            const startDateStr = document.getElementById('startDate').value;
+            const endDateStr = document.getElementById('endDate').value;
+            
+            let priceMultiplier = 1;
+            let dailyRate = 0;
+            
+            // Calculate price based on duration
+            if (startDateStr && endDateStr) {
+                const startDate = new Date(startDateStr);
+                const endDate = new Date(endDateStr);
+                const diffTime = Math.abs(endDate - startDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                // Base price is for 7 days, calculate daily rate
+                const baseDays = 7; // Assume base package is 7 days
+                dailyRate = currentPackagePrice / baseDays;
+                
+                if (diffDays > 0) {
+                    // Calculate price based on actual number of days
+                    priceMultiplier = diffDays / baseDays;
+                }
+            }
+            
+            const totalPerPerson = currentPackagePrice * priceMultiplier;
+            const total = totalPerPerson * guests;
+            
+            // Update display
+            document.getElementById('guestsDisplay').textContent = guests;
+            document.getElementById('pricePerPerson').textContent = '$' + Math.round(totalPerPerson).toLocaleString();
+            document.getElementById('totalPrice').textContent = '$' + Math.round(total).toLocaleString();
+        }
+        
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-24 right-6 z-[200] px-6 py-4 rounded-lg shadow-xl transform translate-x-full transition-transform duration-300 ${
+                type === 'success' ? 'bg-green-500/90 text-white' : 'bg-red-500/90 text-white'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-5 h-5"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+                lucide.createIcons();
+            }, 10);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(120%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Modal Canvas Animation
+        function initModalCanvas(season) {
+            if (!modalCanvas || !modalCtx) return;
+            
+            modalCanvas.width = window.innerWidth;
+            modalCanvas.height = window.innerHeight;
+            
+            // Create particles based on season
+            modalParticles = [];
+            const config = seasonConfig[season];
+            const count = Math.floor(config.count * 0.7);
+            
+            for (let i = 0; i < count; i++) {
+                modalParticles.push(createModalParticle(season));
+            }
+            
+            animateModalCanvas(season);
+        }
+
+        function createModalParticle(season) {
+            const config = seasonConfig[season];
+            return {
+                x: Math.random() * modalCanvas.width,
+                y: Math.random() * modalCanvas.height,
+                size: Math.random() * (config.size.max - config.size.min) + config.size.min,
+                speedY: Math.random() * (config.speedY.max - config.speedY.min) + config.speedY.min,
+                speedX: Math.random() * (config.speedX.max - config.speedX.min) + config.speedX.min,
+                color: config.color[Math.floor(Math.random() * config.color.length)],
+                angle: Math.random() * 360,
+                spin: Math.random() * 2 - 1,
+                opacity: Math.random() * 0.5 + 0.3
+            };
+        }
+
+        function animateModalCanvas(season) {
+            if (!modalCanvas || !modalCtx) return;
+            
+            modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
+            const config = seasonConfig[season];
+            
+            modalParticles.forEach(p => {
+                p.y += p.speedY;
+                p.x += p.speedX + Math.sin(p.angle * Math.PI / 180) * 0.5;
+                p.angle += p.spin;
+                
+                if (p.y > modalCanvas.height + 10) {
+                    p.y = -10;
+                    p.x = Math.random() * modalCanvas.width;
+                }
+                
+                modalCtx.save();
+                modalCtx.translate(p.x, p.y);
+                modalCtx.rotate(p.angle * Math.PI / 180);
+                modalCtx.globalAlpha = p.opacity;
+                modalCtx.fillStyle = p.color;
+                
+                modalCtx.beginPath();
+                if (config.type === 'petal') {
+                    modalCtx.ellipse(0, 0, p.size, p.size / 2, 0, 0, Math.PI * 2);
+                } else if (config.type === 'snow') {
+                    modalCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                } else if (config.type === 'firefly') {
+                    modalCtx.shadowBlur = 10;
+                    modalCtx.shadowColor = p.color;
+                    modalCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                } else if (config.type === 'leaf') {
+                    modalCtx.moveTo(0, -p.size);
+                    modalCtx.quadraticCurveTo(p.size, 0, 0, p.size);
+                    modalCtx.quadraticCurveTo(-p.size, 0, 0, -p.size);
+                }
+                modalCtx.fill();
+                modalCtx.restore();
+            });
+            
+            modalAnimationFrame = requestAnimationFrame(() => animateModalCanvas(season));
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('bookingModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeBookingModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !document.getElementById('bookingModal').classList.contains('hidden')) {
+                closeBookingModal();
+            }
+        });
+
+        // Make functions globally available
+        window.openBookingModal = openBookingModal;
+        window.closeBookingModal = closeBookingModal;
+        window.handleBooking = handleBooking;
+        window.updateEndDate = updateEndDate;
+        window.updateDurationAndPrice = updateDurationAndPrice;
+        window.updateTotalPrice = updateTotalPrice;
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+@page
+@model project.Pages.Admin.Packages.CreateModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Add New Package";
+}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Package | Odyssey Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .font-heading { font-family: 'Cormorant Garamond', serif; }
+        .font-body { font-family: 'Montserrat', sans-serif; }
+        .glass-nav { background: rgba(12, 10, 9, 0.9); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        
+        .season-btn { transition: all 0.3s ease; }
+        .season-btn.active { transform: scale(1.05); }
+        .season-btn:hover { transform: scale(1.02); }
+        
+        .suggestion-item { transition: all 0.2s ease; }
+        .suggestion-item:hover { background: rgba(255, 255, 255, 0.1); }
+    </style>
+</head>
+<body class="bg-stone-950 text-stone-100 font-body min-h-screen">
+    <!-- Admin Navigation -->
+    <nav class="fixed w-full z-50 glass-nav py-4">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-2xl font-heading font-bold tracking-wider text-white flex items-center gap-2 group">
+                    <i data-lucide="compass" class="w-6 h-6 text-amber-200 group-hover:rotate-45 transition-transform duration-500"></i>
+                    ODYSSEY
+                </a>
+                <span class="text-xs uppercase tracking-wider px-3 py-1 bg-amber-400/20 text-amber-300 rounded-full border border-amber-400/30">Admin</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="/Admin/Packages" class="text-amber-200 hover:text-white text-sm flex items-center gap-2">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    Back to Packages
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-12 px-6">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl font-heading text-white mb-8">Add New Travel Package</h1>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Form -->
+                <div class="lg:col-span-2">
+                    <form method="post" class="space-y-6">
+                        @Html.AntiForgeryToken()
+                        
+                        <!-- Season Selection -->
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-3">Select Season *</label>
+                            <div class="grid grid-cols-4 gap-3">
+                                <button type="button" onclick="selectSeason('spring')" 
+                                        class="season-btn p-4 rounded-lg border text-center transition-all bg-pink-500/10 border-pink-500/30 hover:bg-pink-500/20" 
+                                        data-season="spring" id="btn-spring">
+                                    <span class="text-2xl block mb-1">??</span>
+                                    <span class="text-sm text-pink-300">Spring</span>
+                                </button>
+                                <button type="button" onclick="selectSeason('summer')" 
+                                        class="season-btn p-4 rounded-lg border text-center transition-all bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20" 
+                                        data-season="summer" id="btn-summer">
+                                    <span class="text-2xl block mb-1">??</span>
+                                    <span class="text-sm text-amber-300">Summer</span>
+                                </button>
+                                <button type="button" onclick="selectSeason('autumn')" 
+                                        class="season-btn p-4 rounded-lg border text-center transition-all bg-orange-500/10 border-orange-500/30 hover:bg-orange-500/20" 
+                                        data-season="autumn" id="btn-autumn">
+                                    <span class="text-2xl block mb-1">??</span>
+                                    <span class="text-sm text-orange-300">Autumn</span>
+                                </button>
+                                <button type="button" onclick="selectSeason('winter')" 
+                                        class="season-btn p-4 rounded-lg border text-center transition-all bg-cyan-500/10 border-cyan-500/30 hover:bg-cyan-500/20" 
+                                        data-season="winter" id="btn-winter">
+                                    <span class="text-2xl block mb-1">??</span>
+                                    <span class="text-sm text-cyan-300">Winter</span>
+                                </button>
+                            </div>
+                            <input type="hidden" name="Season" id="seasonInput" value="summer" required />
+                        </div>
+                        
+                        <!-- Destination Search with API -->
+                        <div class="relative">
+                            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">Destination *</label>
+                            <div class="relative">
+                                <input type="text" name="Destination" id="destinationInput" required 
+                                       class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded focus:border-amber-400 focus:bg-white/10 outline-none text-white transition-all"
+                                       placeholder="Search for a destination or click to see suggestions..."
+                                       autocomplete="off"
+                                       oninput="searchDestinations(this.value)"
+                                       onfocus="showInitialSuggestions()">
+                                <div id="searchSpinner" class="absolute right-3 top-3 hidden">
+                                    <i data-lucide="loader-2" class="w-5 h-5 text-amber-400 animate-spin"></i>
+                                </div>
+                            </div>
+                            <!-- Suggestions Dropdown -->
+                            <div id="suggestions" class="absolute w-full mt-1 bg-stone-900 border border-white/10 rounded-lg shadow-xl z-10 hidden max-h-64 overflow-y-auto">
+                                <!-- Suggestions will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">Description *</label>
+                            <textarea name="Description" id="descriptionInput" required rows="3"
+                                      class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded focus:border-amber-400 focus:bg-white/10 outline-none text-white transition-all resize-none"
+                                      placeholder="Brief description of the travel experience..."></textarea>
+                        </div>
+                        
+                        <!-- Price -->
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">Price per Person ($) *</label>
+                            <input type="number" name="Price" id="priceInput" required min="100" step="100"
+                                   class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded focus:border-amber-400 focus:bg-white/10 outline-none text-white transition-all"
+                                   placeholder="3500">
+                        </div>
+                        
+                        <!-- Dates -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">Default Start Date *</label>
+                                <input type="date" name="DefaultStartDate" id="startDateInput" required
+                                       class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded focus:border-amber-400 focus:bg-white/10 outline-none text-white transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">Default End Date *</label>
+                                <input type="date" name="DefaultEndDate" id="endDateInput" required
+                                       class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded focus:border-amber-400 focus:bg-white/10 outline-none text-white transition-all">
+                            </div>
+                        </div>
+                        
+                        <!-- Duration (auto-calculated) -->
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">Duration (Days)</label>
+                            <input type="number" name="DurationDays" id="durationInput" readonly
+                                   class="w-full px-4 py-3 bg-white/10 border border-white/10 rounded text-stone-400"
+                                   value="7">
+                        </div>
+                        
+                        <!-- Image URL -->
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">Image URL *</label>
+                            <input type="url" name="ImageUrl" id="imageUrlInput" required
+                                   class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded focus:border-amber-400 focus:bg-white/10 outline-none text-white transition-all"
+                                   placeholder="https://images.unsplash.com/..."
+                                   oninput="updatePreview()">
+                            <p class="text-stone-500 text-xs mt-1">
+                                <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                                Select a destination to get image suggestions
+                            </p>
+                        </div>
+                        
+                        <!-- Active Status -->
+                        <div class="flex items-center gap-3">
+                            <input type="hidden" name="IsActive" value="false" />
+                            <input type="checkbox" name="IsActive" id="isActiveInput" value="true" checked
+                                   class="w-5 h-5 rounded bg-white/5 border-white/10 text-amber-400 focus:ring-amber-400">
+                            <label for="isActiveInput" class="text-white">Package is active and visible to customers</label>
+                        </div>
+                        
+                        <!-- Submit -->
+                        <div class="flex gap-4 pt-4">
+                            <button type="submit" class="flex-1 px-6 py-4 bg-amber-200 hover:bg-amber-100 rounded text-stone-900 font-bold transition-colors">
+                                Create Package
+                            </button>
+                            <a href="/Admin/Packages" class="px-6 py-4 border border-white/30 rounded text-white hover:bg-white/10 transition-colors text-center">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Preview Panel -->
+                <div class="lg:col-span-1">
+                    <div class="sticky top-24">
+                        <h3 class="text-sm uppercase tracking-wider text-stone-400 mb-4">Preview</h3>
+                        <div class="bg-stone-900/50 backdrop-blur-xl rounded-lg border border-white/10 overflow-hidden">
+                            <div class="h-48 bg-stone-800" id="previewImage">
+                                <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400" 
+                                     alt="Preview" class="w-full h-full object-cover" id="previewImg">
+                            </div>
+                            <div class="p-4">
+                                <span class="text-xs uppercase tracking-wider px-2 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/50" id="previewSeason">
+                                    Summer
+                                </span>
+                                <h4 class="text-xl font-heading text-white mt-3" id="previewDestination">Destination Name</h4>
+                                <p class="text-stone-400 text-sm mt-1" id="previewDescription">Description will appear here...</p>
+                                <div class="flex justify-between items-center mt-4 pt-4 border-t border-white/10">
+                                    <span class="text-stone-500 text-xs" id="previewDates">Dates</span>
+                                    <span class="text-xl font-heading text-amber-200" id="previewPrice">$0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Image Suggestions -->
+                        <div id="imageSuggestions" class="mt-4 hidden">
+                            <h3 class="text-sm uppercase tracking-wider text-stone-400 mb-3">Suggested Images</h3>
+                            <div class="grid grid-cols-2 gap-2" id="imageSuggestionsGrid">
+                                <!-- Image suggestions will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        lucide.createIcons();
+        
+        let selectedSeason = 'summer';
+        let searchTimeout;
+        let suggestionsData = []; // Store suggestions data
+        
+        // Show initial suggestions when focusing on input
+        async function showInitialSuggestions() {
+            const query = document.getElementById('destinationInput').value;
+            if (query.length === 0) {
+                // Show curated suggestions for the selected season
+                searchDestinations('');
+            }
+        }
+        
+        // Season Selection
+        function selectSeason(season) {
+            selectedSeason = season;
+            document.getElementById('seasonInput').value = season;
+            
+            // Update button styles
+            document.querySelectorAll('.season-btn').forEach(btn => {
+                btn.classList.remove('active', 'ring-2', 'ring-white');
+            });
+            document.getElementById('btn-' + season).classList.add('active', 'ring-2', 'ring-white');
+            
+            // Update preview
+            updatePreview();
+            
+            // Search for destinations in this season
+            const query = document.getElementById('destinationInput').value;
+            searchDestinations(query);
+        }
+        
+        // Destination Search with API
+        async function searchDestinations(query) {
+            clearTimeout(searchTimeout);
+            
+            const suggestionsDiv = document.getElementById('suggestions');
+            const spinner = document.getElementById('searchSpinner');
+            
+            searchTimeout = setTimeout(async () => {
+                spinner.classList.remove('hidden');
+                
+                try {
+                    const response = await fetch(`/api/destinations/search?query=${encodeURIComponent(query)}&season=${selectedSeason}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    suggestionsData = data.suggestions || []; // Store data
+                    
+                    console.log('Search results:', data);
+                    
+                    if (suggestionsData.length > 0) {
+                        suggestionsDiv.innerHTML = suggestionsData.map((s, index) => `
+                            <div class="suggestion-item p-3 cursor-pointer border-b border-white/5 last:border-b-0 hover:bg-white/10" 
+                                 data-index="${index}"
+                                 onclick="selectSuggestion(${index})">
+                                <div class="flex items-center gap-3 pointer-events-none">
+                                    <div class="w-10 h-10 rounded bg-white/10 flex items-center justify-center">
+                                        <span class="text-lg">${getSeasonEmoji(s.suggestedSeason)}</span>
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="text-white font-medium">${escapeHtml(s.name)}</div>
+                                        <div class="text-stone-500 text-xs">${escapeHtml(s.country)} • ${s.suggestedSeason}</div>
+                                    </div>
+                                    <span class="text-xs text-stone-400">${escapeHtml(s.description || '')}</span>
+                                </div>
+                            </div>
+                        `).join('');
+                        suggestionsDiv.classList.remove('hidden');
+                    } else {
+                        suggestionsDiv.innerHTML = '<div class="p-4 text-stone-500 text-center">No suggestions found. You can still enter manually.</div>';
+                        suggestionsDiv.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                    suggestionsDiv.innerHTML = '<div class="p-4 text-red-400 text-center">Error searching. Please try again.</div>';
+                    suggestionsDiv.classList.remove('hidden');
+                }
+                
+                spinner.classList.add('hidden');
+            }, 300);
+        }
+        
+        // Select suggestion by index
+        function selectSuggestion(index) {
+            const s = suggestionsData[index];
+            if (!s) return;
+            
+            console.log('Selected:', s);
+            
+            document.getElementById('destinationInput').value = `${s.name}, ${s.country}`;
+            document.getElementById('descriptionInput').value = s.description || `Experience the beauty of ${s.name}`;
+            document.getElementById('suggestions').classList.add('hidden');
+            
+            // Update season if suggested
+            if (s.suggestedSeason) {
+                selectSeason(s.suggestedSeason);
+            }
+            
+            // Show image suggestions
+            if (s.imageUrls && s.imageUrls.length > 0) {
+                const grid = document.getElementById('imageSuggestionsGrid');
+                grid.innerHTML = s.imageUrls.slice(0, 4).map((url, i) => `
+                    <div class="cursor-pointer rounded overflow-hidden border-2 border-transparent hover:border-amber-400 transition-colors"
+                         onclick="selectImage(${i})">
+                        <img src="${url}" alt="Suggestion ${i+1}" class="w-full h-20 object-cover" onerror="this.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400'">
+                    </div>
+                `).join('');
+                document.getElementById('imageSuggestions').classList.remove('hidden');
+                
+                // Store image URLs for selection
+                window.currentImageUrls = s.imageUrls;
+                
+                // Auto-select first image
+                if (s.imageUrls[0]) {
+                    document.getElementById('imageUrlInput').value = s.imageUrls[0];
+                    document.getElementById('previewImg').src = s.imageUrls[0];
+                }
+            }
+            
+            updatePreview();
+        }
+        
+        // Select image by index
+        function selectImage(index) {
+            if (window.currentImageUrls && window.currentImageUrls[index]) {
+                document.getElementById('imageUrlInput').value = window.currentImageUrls[index];
+                document.getElementById('previewImg').src = window.currentImageUrls[index];
+            }
+        }
+        
+        function getSeasonEmoji(season) {
+            switch(season?.toLowerCase()) {
+                case 'spring': return '??';
+                case 'summer': return '??';
+                case 'autumn': return '??';
+                case 'winter': return '??';
+                default: return '??';
+            }
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Date Change Handler
+        document.getElementById('startDateInput').addEventListener('change', calculateDuration);
+        document.getElementById('endDateInput').addEventListener('change', calculateDuration);
+        
+        function calculateDuration() {
+            const start = new Date(document.getElementById('startDateInput').value);
+            const end = new Date(document.getElementById('endDateInput').value);
+            
+            if (start && end && end > start) {
+                const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                document.getElementById('durationInput').value = days;
+                updatePreview();
+            }
+        }
+        
+        // Update Preview
+        function updatePreview() {
+            const destination = document.getElementById('destinationInput').value || 'Destination Name';
+            const description = document.getElementById('descriptionInput').value || 'Description will appear here...';
+            const price = document.getElementById('priceInput').value || '0';
+            const imageUrl = document.getElementById('imageUrlInput').value;
+            const startDate = document.getElementById('startDateInput').value;
+            const endDate = document.getElementById('endDateInput').value;
+            
+            document.getElementById('previewDestination').textContent = destination;
+            document.getElementById('previewDescription').textContent = description;
+            document.getElementById('previewPrice').textContent = '$' + parseInt(price || 0).toLocaleString();
+            
+            if (imageUrl) {
+                document.getElementById('previewImg').src = imageUrl;
+            }
+            
+            // Update season badge
+            const seasonBadge = document.getElementById('previewSeason');
+            seasonBadge.textContent = selectedSeason.charAt(0).toUpperCase() + selectedSeason.slice(1);
+            seasonBadge.className = 'text-xs uppercase tracking-wider px-2 py-1 rounded-full border ';
+            switch(selectedSeason) {
+                case 'spring': seasonBadge.className += 'bg-pink-400/20 text-pink-300 border-pink-400/50'; break;
+                case 'summer': seasonBadge.className += 'bg-amber-400/20 text-amber-300 border-amber-400/50'; break;
+                case 'autumn': seasonBadge.className += 'bg-orange-400/20 text-orange-300 border-orange-400/50'; break;
+                case 'winter': seasonBadge.className += 'bg-cyan-400/20 text-cyan-300 border-cyan-400/50'; break;
+            }
+            
+            // Update dates
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                document.getElementById('previewDates').textContent = 
+                    `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+            }
+        }
+        
+        // Close suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#destinationInput') && !e.target.closest('#suggestions')) {
+                document.getElementById('suggestions').classList.add('hidden');
+            }
+        });
+        
+        // Initialize
+        selectSeason('summer');
+    </script>
+</body>
+</html>

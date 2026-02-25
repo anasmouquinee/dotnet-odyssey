@@ -18,7 +18,10 @@ namespace project
             
             // Add DbContext - uses PostgreSQL in production, SQL Server locally
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            if (builder.Environment.IsProduction() || connectionString!.StartsWith("Host=") || connectionString.StartsWith("postgres") || connectionString.StartsWith("postgresql://"))
+            if (connectionString!.StartsWith("postgresql://") || connectionString.StartsWith("postgres://"))
+                connectionString = ConvertPostgresUrlToNpgsql(connectionString);
+
+            if (builder.Environment.IsProduction() || connectionString.StartsWith("Host="))
             {
                 builder.Services.AddDbContext<ApplicationDbContext>(options =>
                     options.UseNpgsql(connectionString));
@@ -147,6 +150,18 @@ namespace project
             using var sha256 = SHA256.Create();
             var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
             return Convert.ToBase64String(hashedBytes);
+        }
+
+        private static string ConvertPostgresUrlToNpgsql(string url)
+        {
+            var uri = new Uri(url);
+            var userInfo = uri.UserInfo.Split(':', 2);
+            var host = uri.Host;
+            var port = uri.Port > 0 ? uri.Port : 5432;
+            var database = uri.AbsolutePath.TrimStart('/');
+            var username = Uri.UnescapeDataString(userInfo[0]);
+            var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+            return $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
         }
     }
 }

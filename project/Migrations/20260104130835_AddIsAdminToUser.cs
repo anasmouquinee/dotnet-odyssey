@@ -13,7 +13,6 @@ namespace project.Migrations
             migrationBuilder.AddColumn<bool>(
                 name: "IsAdmin",
                 table: "Users",
-                type: "bit",
                 nullable: false,
                 defaultValue: false);
         }

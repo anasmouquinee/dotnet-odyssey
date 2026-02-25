@@ -24,6 +24,7 @@ namespace project
 
             if (builder.Environment.IsProduction() || connectionString.StartsWith("Host="))
             {
+                AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
                 builder.Services.AddDbContext<ApplicationDbContext>(options =>
                     options.UseNpgsql(connectionString));
             }
@@ -65,9 +66,15 @@ namespace project
                 
                 try
                 {
-                    context.Database.Migrate(); // This will create the database and apply migrations
-                    
-                    // Seed admin user if not exists
+                    // If TravelPackages table doesn't exist, wipe migration history and re-run
+                    if (!context.Database.GetAppliedMigrations().Any() ||
+                        !context.Database.CanConnect() ||
+                        !TableExists(context, "TravelPackages"))
+                    {
+                        context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"__EFMigrationsHistory\"");
+                    }
+
+                    context.Database.Migrate();
                     await SeedAdminUserAsync(context, logger);
                 }
                 catch (Exception ex)
@@ -151,6 +158,19 @@ namespace project
             using var sha256 = SHA256.Create();
             var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
             return Convert.ToBase64String(hashedBytes);
+        }
+
+        private static bool TableExists(ApplicationDbContext context, string tableName)
+        {
+            try
+            {
+                var conn = context.Database.GetDbConnection();
+                if (conn.State != System.Data.ConnectionState.Open) conn.Open();
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = $"SELECT 1 FROM information_schema.tables WHERE table_name = '{tableName}'";
+                return cmd.ExecuteScalar() != null;
+            }
+            catch { return false; }
         }
 
         private static string ConvertPostgresUrlToNpgsql(string url)

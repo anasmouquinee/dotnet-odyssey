@@ -24,7 +24,6 @@ namespace project
 
             if (builder.Environment.IsProduction() || connectionString.StartsWith("Host="))
             {
-                AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
                 builder.Services.AddDbContext<ApplicationDbContext>(options =>
                     options.UseNpgsql(connectionString));
             }
@@ -66,15 +65,8 @@ namespace project
                 
                 try
                 {
-                    // If TravelPackages table doesn't exist, wipe migration history and re-run
-                    if (!context.Database.GetAppliedMigrations().Any() ||
-                        !context.Database.CanConnect() ||
-                        !TableExists(context, "TravelPackages"))
-                    {
-                        context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"__EFMigrationsHistory\"");
-                    }
-
                     context.Database.Migrate();
+                    await SeedTravelPackagesAsync(context, logger);
                     await SeedAdminUserAsync(context, logger);
                 }
                 catch (Exception ex)
@@ -158,6 +150,31 @@ namespace project
             using var sha256 = SHA256.Create();
             var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
             return Convert.ToBase64String(hashedBytes);
+        }
+
+        private static async Task SeedTravelPackagesAsync(ApplicationDbContext context, ILogger logger)
+        {
+            if (await context.TravelPackages.AnyAsync()) return;
+
+            var packages = new[]
+            {
+                new project.Models.TravelPackage { Destination = "Kyoto, Japan", Description = "Philosopher's Path Walk", Price = 4200, Season = "spring", ImageUrl = "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=2070", DefaultStartDate = new DateTime(2025,4,1,0,0,0,DateTimeKind.Utc), DefaultEndDate = new DateTime(2025,4,15,0,0,0,DateTimeKind.Utc), DurationDays = 14, IsActive = true },
+                new project.Models.TravelPackage { Destination = "Keukenhof, Holland", Description = "Private Tulip Fields Tour", Price = 3100, Season = "spring", ImageUrl = "https://images.unsplash.com/photo-1460500063983-994d4c27756c?q=80&w=2070", DefaultStartDate = new DateTime(2025,4,20,0,0,0,DateTimeKind.Utc), DefaultEndDate = new DateTime(2025,5,5,0,0,0,DateTimeKind.Utc), DurationDays = 15, IsActive = true },
+                new project.Models.TravelPackage { Destination = "Patagonia, Chile", Description = "Austral Spring Trek", Price = 5800, Season = "spring", ImageUrl = "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=2070", DefaultStartDate = new DateTime(2025,10,10,0,0,0,DateTimeKind.Utc), DefaultEndDate = new DateTime(2025,10,25,0,0,0,DateTimeKind.Utc), DurationDays = 15, IsActive = true },
+                new project.Models.TravelPackage { Destination = "Amalfi Coast, Italy", Description = "Private Yacht Charter", Price = 6500, Season = "summer", ImageUrl = "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=2560", DefaultStartDate = new DateTime(2025,6,15,0,0,0,DateTimeKind.Utc), DefaultEndDate = new DateTime(2025,6,30,0,0,0,DateTimeKind.Utc), DurationDays = 15, IsActive = true },
+                new project.Models.TravelPackage { Destination = "Santorini, Greece", Description = "Caldera Sunset Villas", Price = 5200, Season = "summer", ImageUrl = "https://images.unsplash.com/photo-1601581875309-fafbf2d3ed2a?q=80&w=2574", DefaultStartDate = new DateTime(2025,7,10,0,0,0,DateTimeKind.Utc), DefaultEndDate = new DateTime(2025,7,25,0,0,0,DateTimeKind.Utc), DurationDays = 15, IsActive = true },
+                new project.Models.TravelPackage { Destination = "Baa Atoll, Maldives", Description = "Overwater Sanctuary", Price = 8900, Season = "summer", ImageUrl = "https://images.unsplash.com/photo-1540206351-d6465b3ac5c1?q=80&w=2664", DefaultStartDate = new DateTime(2025,8,5,0,0,0,DateTimeKind.Utc), DefaultEndDate = new DateTime(2025,8,15,0,0,0,DateTimeKind.Utc), DurationDays = 10, IsActive = true },
+                new project.Models.TravelPackage { Destination = "Vermont, USA", Description = "New England Foliage Tour", Price = 3800, Season = "autumn", ImageUrl = "https://images.unsplash.com/photo-1509565840034-3c385bbe6451?q=80&w=2000", DefaultStartDate = new DateTime(2025,9,25,0,0,0,DateTimeKind.Utc), DefaultEndDate = new DateTime(2025,10,10,0,0,0,DateTimeKind.Utc), DurationDays = 15, IsActive = true },
+                new project.Models.TravelPackage { Destination = "Bavaria, Germany", Description = "Castle & Forest Route", Price = 4500, Season = "autumn", ImageUrl = "https://images.unsplash.com/photo-1505307469735-373801f95c47?q=80&w=2670", DefaultStartDate = new DateTime(2025,10,1,0,0,0,DateTimeKind.Utc), DefaultEndDate = new DateTime(2025,10,15,0,0,0,DateTimeKind.Utc), DurationDays = 14, IsActive = true },
+                new project.Models.TravelPackage { Destination = "Arashiyama, Japan", Description = "Momiji Maple Viewing", Price = 4800, Season = "autumn", ImageUrl = "https://images.unsplash.com/photo-1476611317561-60e1b778edfb?q=80&w=2670", DefaultStartDate = new DateTime(2025,11,15,0,0,0,DateTimeKind.Utc), DefaultEndDate = new DateTime(2025,11,30,0,0,0,DateTimeKind.Utc), DurationDays = 15, IsActive = true },
+                new project.Models.TravelPackage { Destination = "Lapland, Finland", Description = "Aurora Glass Igloos", Price = 5500, Season = "winter", ImageUrl = "https://images.unsplash.com/photo-1518182170546-0766ce6fec56?q=80&w=2000", DefaultStartDate = new DateTime(2025,12,10,0,0,0,DateTimeKind.Utc), DefaultEndDate = new DateTime(2026,1,5,0,0,0,DateTimeKind.Utc), DurationDays = 26, IsActive = true },
+                new project.Models.TravelPackage { Destination = "Zermatt, Switzerland", Description = "Matterhorn Ski Chalet", Price = 7200, Season = "winter", ImageUrl = "https://images.unsplash.com/photo-1551524357-1249fa6b2eb1?q=80&w=2670", DefaultStartDate = new DateTime(2026,1,15,0,0,0,DateTimeKind.Utc), DefaultEndDate = new DateTime(2026,2,10,0,0,0,DateTimeKind.Utc), DurationDays = 26, IsActive = true },
+                new project.Models.TravelPackage { Destination = "Aspen, USA", Description = "Luxury Winter Retreat", Price = 9500, Season = "winter", ImageUrl = "https://images.unsplash.com/photo-1518096366620-33062d35508a?q=80&w=2670", DefaultStartDate = new DateTime(2026,2,20,0,0,0,DateTimeKind.Utc), DefaultEndDate = new DateTime(2026,3,5,0,0,0,DateTimeKind.Utc), DurationDays = 13, IsActive = true },
+            };
+
+            await context.TravelPackages.AddRangeAsync(packages);
+            await context.SaveChangesAsync();
+            logger.LogInformation("Seeded {Count} travel packages.", packages.Length);
         }
 
         private static bool TableExists(ApplicationDbContext context, string tableName)

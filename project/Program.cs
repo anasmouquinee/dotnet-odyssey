@@ -18,7 +18,7 @@ namespace project
             
             // Add DbContext - uses PostgreSQL in production, SQL Server locally
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            if (builder.Environment.IsProduction() || connectionString!.StartsWith("Host=") || connectionString.StartsWith("postgres"))
+            if (builder.Environment.IsProduction() || connectionString!.StartsWith("Host=") || connectionString.StartsWith("postgres") || connectionString.StartsWith("postgresql://"))
             {
                 builder.Services.AddDbContext<ApplicationDbContext>(options =>
                     options.UseNpgsql(connectionString));

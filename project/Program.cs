@@ -19,7 +19,16 @@ namespace project
             
             // Add DbContext - uses PostgreSQL in production, SQL Server locally
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            if (connectionString!.StartsWith("postgresql://") || connectionString.StartsWith("postgres://"))
+
+            // Fall back to DATABASE_URL env var (Railway / Render / Heroku)
+            if (string.IsNullOrWhiteSpace(connectionString) || connectionString.Contains('#'))
+                connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException(
+                    "No database connection string found. Set ConnectionStrings__DefaultConnection or DATABASE_URL.");
+
+            if (connectionString.StartsWith("postgresql://") || connectionString.StartsWith("postgres://"))
                 connectionString = ConvertPostgresUrlToNpgsql(connectionString);
 
             if (builder.Environment.IsProduction() || connectionString.StartsWith("Host="))

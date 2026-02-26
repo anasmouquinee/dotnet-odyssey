@@ -22,7 +22,9 @@ namespace project
             if (connectionString!.StartsWith("postgresql://") || connectionString.StartsWith("postgres://"))
                 connectionString = ConvertPostgresUrlToNpgsql(connectionString);
 
-            if (builder.Environment.IsProduction() || connectionString.StartsWith("Host="))
+            var isPostgres = builder.Environment.IsProduction() || connectionString.StartsWith("Host=");
+
+            if (isPostgres)
             {
                 builder.Services.AddDbContext<ApplicationDbContext>(options =>
                     options.UseNpgsql(connectionString));
@@ -65,34 +67,43 @@ namespace project
                 
                 try
                 {
-                    if (connectionString!.StartsWith("Host="))
+                    logger.LogInformation("DB setup starting. isPostgres={IsPostgres}", isPostgres);
+
+                    if (isPostgres)
                     {
-                        // PostgreSQL (Railway): avoid SQL Server-generated migrations.
-                        // If tables are missing or in a stale state, drop everything
-                        // and let Npgsql recreate the schema natively via EnsureCreated.
-                        if (!TableExists(context, "TravelPackages"))
+                        var tableExists = TableExists(connectionString!, "TravelPackages");
+                        logger.LogInformation("TableExists(TravelPackages)={Exists}", tableExists);
+
+                        if (!tableExists)
                         {
-                            logger.LogInformation("Tables missing — recreating PostgreSQL schema.");
+                            logger.LogInformation("Tables missing — dropping stale objects and recreating schema.");
                             context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"CartItems\" CASCADE");
                             context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"Bookings\" CASCADE");
                             context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"Users\" CASCADE");
                             context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"TravelPackages\" CASCADE");
                             context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"__EFMigrationsHistory\"");
-                            context.Database.EnsureCreated();
-                            logger.LogInformation("PostgreSQL schema created successfully.");
+                            var created = context.Database.EnsureCreated();
+                            logger.LogInformation("EnsureCreated={Created}", created);
                         }
                     }
                     else
                     {
                         context.Database.Migrate();
                     }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "DB schema setup failed.");
+                }
 
+                try
+                {
                     await SeedTravelPackagesAsync(context, logger);
                     await SeedAdminUserAsync(context, logger);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "An error occurred while setting up the database.");
+                    logger.LogError(ex, "DB seeding failed.");
                 }
             }
 
@@ -198,14 +209,14 @@ namespace project
             logger.LogInformation("Seeded {Count} travel packages.", packages.Length);
         }
 
-        private static bool TableExists(ApplicationDbContext context, string tableName)
+        private static bool TableExists(string connectionString, string tableName)
         {
             try
             {
-                var conn = context.Database.GetDbConnection();
-                if (conn.State != System.Data.ConnectionState.Open) conn.Open();
+                using var conn = new NpgsqlConnection(connectionString);
+                conn.Open();
                 using var cmd = conn.CreateCommand();
-                cmd.CommandText = $"SELECT 1 FROM information_schema.tables WHERE table_name = '{tableName}'";
+                cmd.CommandText = $"SELECT 1 FROM information_schema.tables WHERE table_name = '{tableName}' AND table_schema = 'public'";
                 return cmd.ExecuteScalar() != null;
             }
             catch { return false; }

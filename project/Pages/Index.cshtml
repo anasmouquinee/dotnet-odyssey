@@ -83,6 +83,23 @@
             transform: scale(1.1);
         }
 
+        /* Mobile: always show Book Now button since hover doesn't work on touch */
+        @@media (hover: none) and (pointer: coarse) {
+            .group .book-now-btn {
+                opacity: 1 !important;
+                transform: translateY(0) !important;
+            }
+        }
+
+        /* Mobile modal full-screen */
+        @@media (max-width: 639px) {
+            #modalContent {
+                max-height: 100dvh;
+                border-radius: 0;
+                border: none;
+            }
+        }
+
         /* Season Specific Gradients (Dynamic Classes) */
         .bg-gradient-spring { background-image: linear-gradient(to bottom, rgba(28,25,23,0.8), rgba(80, 7, 36, 0.1), rgba(28,25,23,1)); }
         .bg-gradient-summer { background-image: linear-gradient(to bottom, rgba(28,25,23,0.8), rgba(120, 53, 15, 0.1), rgba(28,25,23,1)); }
@@ -113,8 +130,8 @@
     <!-- Navigation -->
     <nav class="fixed w-full z-50 transition-all duration-300 py-6" id="navbar">
         <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
-            <a href="#home" class="text-3xl font-heading font-bold tracking-wider text-white flex items-center gap-2 group">
-                <i data-lucide="compass" class="w-8 h-8 text-amber-200 group-hover:rotate-45 transition-transform duration-500"></i>
+            <a href="#home" class="text-2xl sm:text-3xl font-heading font-bold tracking-wider text-white flex items-center gap-2 group">
+                <i data-lucide="compass" class="w-6 h-6 sm:w-8 sm:h-8 text-amber-200 group-hover:rotate-45 transition-transform duration-500"></i>
                 ODYSSEY
             </a>
             
@@ -166,75 +183,92 @@
     </nav>
 
     <!-- Mobile Menu -->
-    <div id="mobileMenu" class="fixed inset-0 z-40 bg-stone-950 flex flex-col items-center justify-center gap-6 transform -translate-y-full transition-transform duration-500 ease-in-out md:hidden">
-        <button class="absolute top-8 right-8 text-white/50 hover:text-white" id="closeMenuBtn"><i data-lucide="x" class="w-8 h-8"></i></button>
-        <a href="#spring" class="text-3xl font-heading text-pink-200" onclick="toggleMenu()">Spring</a>
-        <a href="#summer" class="text-3xl font-heading text-amber-200" onclick="toggleMenu()">Summer</a>
-        <a href="#autumn" class="text-3xl font-heading text-orange-200" onclick="toggleMenu()">Autumn</a>
-        <a href="#winter" class="text-3xl font-heading text-cyan-200" onclick="toggleMenu()">Winter</a>
-        <div class="w-24 h-px bg-white/20 my-2"></div>
+    <div id="mobileMenu" class="fixed inset-0 z-40 bg-stone-950/95 backdrop-blur-xl flex flex-col items-center justify-center gap-5 transform -translate-y-full transition-transform duration-500 ease-in-out md:hidden">
+        <button class="absolute top-6 right-6 text-white/50 hover:text-white" id="closeMenuBtn"><i data-lucide="x" class="w-7 h-7"></i></button>
+        <a href="#spring" class="text-2xl font-heading text-pink-200 tracking-wide" onclick="toggleMenu()">Spring</a>
+        <a href="#summer" class="text-2xl font-heading text-amber-200 tracking-wide" onclick="toggleMenu()">Summer</a>
+        <a href="#autumn" class="text-2xl font-heading text-orange-200 tracking-wide" onclick="toggleMenu()">Autumn</a>
+        <a href="#winter" class="text-2xl font-heading text-cyan-200 tracking-wide" onclick="toggleMenu()">Winter</a>
+        <div class="w-16 h-px bg-white/20 my-1"></div>
         @if (Model.IsAuthenticated)
         {
-            <a href="/Cart" class="text-xl text-white" onclick="toggleMenu()">My Cart (@Model.CartCount)</a>
-            <a href="/Bookings" class="text-xl text-white" onclick="toggleMenu()">My Bookings</a>
-            <a href="/Profile" class="text-xl text-amber-200 flex items-center gap-2" onclick="toggleMenu()">
+            @if (Model.IsAdmin)
+            {
+                <a href="/Admin" class="text-lg text-amber-300 flex items-center gap-2" onclick="toggleMenu()">
+                    <i data-lucide="shield" class="w-5 h-5"></i>
+                    Admin
+                </a>
+            }
+            <a href="/Cart" class="text-lg text-white flex items-center gap-2" onclick="toggleMenu()">
+                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                My Cart
+                @if (Model.CartCount > 0)
+                {
+                    <span class="bg-amber-400 text-stone-900 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">@Model.CartCount</span>
+                }
+            </a>
+            <a href="/Bookings" class="text-lg text-white flex items-center gap-2" onclick="toggleMenu()">
+                <i data-lucide="map" class="w-5 h-5"></i>
+                My Bookings
+            </a>
+            <a href="/Profile" class="text-lg text-amber-200 flex items-center gap-2" onclick="toggleMenu()">
                 <i data-lucide="user" class="w-5 h-5"></i>
                 @Model.UserName
             </a>
-            <a href="/Account/Logout" class="text-xl text-stone-400">Logout</a>
+            <a href="/Account/Logout" class="text-base text-stone-500 mt-2">Logout</a>
         }
         else
         {
-            <a href="/Account/Login" class="text-xl text-white" onclick="toggleMenu()">Login</a>
-            <a href="/Account/Register" class="text-xl text-amber-200" onclick="toggleMenu()">Sign Up</a>
+            <a href="/Account/Login" class="text-lg text-white" onclick="toggleMenu()">Login</a>
+            <a href="/Account/Register" class="px-8 py-3 bg-amber-200 text-stone-900 rounded-full font-semibold text-base" onclick="toggleMenu()">Sign Up</a>
         }
     </div>
 
     <!-- Hero Section -->
-    <section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden px-4" data-season="intro">
+    <section id="home" class="relative min-h-[100dvh] flex items-center justify-center overflow-hidden px-5 sm:px-6" data-season="intro">
         <div class="text-center z-10 relative w-full max-w-5xl">
             <div class="overflow-hidden">
-                <h2 class="text-sm md:text-base font-medium tracking-[0.4em] text-stone-400 uppercase mb-4 reveal active">
+                <h2 class="text-[10px] sm:text-sm md:text-base font-medium tracking-[0.3em] sm:tracking-[0.4em] text-stone-400 uppercase mb-3 sm:mb-4 reveal active">
                     A Journey for Every Season
                 </h2>
             </div>
-            
-            <h1 class="text-6xl md:text-8xl lg:text-9xl font-heading font-thin mb-8 tracking-tight text-white reveal active" style="transition-delay: 200ms;">
+
+            <h1 class="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-heading font-thin mb-6 sm:mb-8 tracking-tight text-white reveal active" style="transition-delay: 200ms;">
                 Chasing <span id="heroDynamicText" class="italic font-light text-amber-100 transition-colors duration-1000">Time</span>
             </h1>
-            
-            <p class="text-lg md:text-xl font-light max-w-xl mx-auto text-stone-300 mb-12 leading-relaxed reveal active" style="transition-delay: 400ms;">
+
+            <p class="text-base sm:text-lg md:text-xl font-light max-w-md sm:max-w-xl mx-auto text-stone-300 mb-8 sm:mb-12 leading-relaxed reveal active px-2" style="transition-delay: 400ms;">
                 Scroll to explore our curated collections, timed perfectly to nature's most spectacular performances.
             </p>
 
-            <div class="flex flex-col md:flex-row justify-center gap-6 reveal active" style="transition-delay: 600ms;">
-                <a href="#spring" class="px-8 py-4 bg-white text-stone-900 rounded-sm font-medium tracking-widest uppercase text-xs hover:bg-amber-100 transition-colors">
+            <div class="flex justify-center reveal active" style="transition-delay: 600ms;">
+                <a href="#spring" class="px-6 sm:px-8 py-3.5 sm:py-4 bg-white text-stone-900 rounded-sm font-medium tracking-widest uppercase text-[10px] sm:text-xs hover:bg-amber-100 transition-colors">
                     Start the Journey
                 </a>
             </div>
         </div>
-        
+
         <!-- Scroll Indicator -->
-        <div class="absolute bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce">
+        <div class="absolute bottom-8 sm:bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce">
             <span class="text-[10px] uppercase tracking-widest">Scroll</span>
             <i data-lucide="chevron-down" class="w-4 h-4"></i>
         </div>
     </section>
 
     <!-- SECTION 1: SPRING -->
-    <section id="spring" class="relative py-32 px-6 border-t border-white/5 min-h-screen flex items-center" data-season="spring">
+    <section id="spring" class="relative py-16 sm:py-24 md:py-32 px-5 sm:px-6 border-t border-white/5 min-h-screen flex items-center" data-season="spring">
         <div class="max-w-7xl mx-auto w-full">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-16 reveal">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 sm:mb-12 md:mb-16 reveal">
                 <div>
                     <span class="text-pink-300 text-xs tracking-[0.3em] uppercase block mb-3 flex items-center gap-2"><i data-lucide="flower-2" class="w-4 h-4"></i> Rebirth</span>
-                    <h2 class="text-4xl md:text-6xl font-heading text-white">Spring Awakening</h2>
+                    <h2 class="text-3xl sm:text-4xl md:text-6xl font-heading text-white">Spring Awakening</h2>
                 </div>
-                <div class="mt-6 md:mt-0">
+                <div class="mt-4 md:mt-0">
                     <p class="text-stone-400 max-w-sm text-sm leading-7">Fleeting moments of color. Witness the world waking up in a symphony of petals and fresh breezes.</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
                 @{ var springPackages = Model.TravelPackages.Where(p => p.Season == "spring").ToList(); var springIndex = 0; }
                 @foreach (var package in springPackages)
                 {
@@ -242,15 +276,19 @@
                     var dateStr = $"{package.DefaultStartDate:MMM d} - {package.DefaultEndDate:MMM d, yyyy}";
                     <div class="group cursor-pointer reveal @delayClass" 
                          onclick="openBookingModal('@package.Destination.Replace("'", "\\'")', '@package.Description.Replace("'", "\\'")', '$@package.Price.ToString("N0")', '@dateStr', 'spring', '@package.ImageUrl', @package.Id)">
-                        <div class="img-container relative h-[500px] w-full mb-6 overflow-hidden rounded-sm">
+                        <div class="img-container relative h-[320px] sm:h-[400px] md:h-[500px] w-full mb-4 sm:mb-6 overflow-hidden rounded-lg sm:rounded-sm">
                             <img src="@package.ImageUrl" alt="@package.Destination" class="w-full h-full object-cover">
-                            <div class="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-3 py-1 text-xs text-white uppercase tracking-wider border border-white/20">@dateStr</div>
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
-                            <div class="absolute bottom-4 right-4 bg-pink-400/80 backdrop-blur-sm px-4 py-2 rounded-full text-white text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                            <div class="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/10 backdrop-blur-md px-2.5 py-1 text-[10px] sm:text-xs text-white uppercase tracking-wider border border-white/20 rounded-sm">@dateStr</div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-70 sm:opacity-60 group-hover:opacity-40 transition-opacity"></div>
+                            <div class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-pink-400/80 backdrop-blur-sm px-4 py-2 rounded-full text-white text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 book-now-btn">
                                 Book Now
                             </div>
+                            <div class="absolute bottom-3 left-3 sm:hidden">
+                                <h3 class="text-lg font-heading text-white drop-shadow-lg">@package.Destination</h3>
+                                <span class="text-pink-200/80 text-xs font-medium">$@package.Price.ToString("N0")</span>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-start">
+                        <div class="hidden sm:flex justify-between items-start">
                             <div>
                                 <h3 class="text-2xl font-heading text-white group-hover:text-pink-300 transition-colors">@package.Destination</h3>
                                 <p class="text-stone-500 text-sm mt-1">@package.Description</p>
@@ -265,19 +303,19 @@
     </section>
 
     <!-- SECTION 2: SUMMER -->
-    <section id="summer" class="relative py-32 px-6 border-t border-white/5 min-h-screen flex items-center" data-season="summer">
+    <section id="summer" class="relative py-16 sm:py-24 md:py-32 px-5 sm:px-6 border-t border-white/5 min-h-screen flex items-center" data-season="summer">
         <div class="max-w-7xl mx-auto w-full">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-16 reveal">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 sm:mb-12 md:mb-16 reveal">
                 <div>
                     <span class="text-amber-300 text-xs tracking-[0.3em] uppercase block mb-3 flex items-center gap-2"><i data-lucide="sun" class="w-4 h-4"></i> Radiance</span>
-                    <h2 class="text-4xl md:text-6xl font-heading text-white">Golden Hours</h2>
+                    <h2 class="text-3xl sm:text-4xl md:text-6xl font-heading text-white">Golden Hours</h2>
                 </div>
-                <div class="mt-6 md:mt-0">
+                <div class="mt-4 md:mt-0">
                     <p class="text-stone-400 max-w-sm text-sm leading-7">Long days and warm nights. Bask in the glow of the world's most stunning coastal retreats.</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
                 @{ var summerPackages = Model.TravelPackages.Where(p => p.Season == "summer").ToList(); var summerIndex = 0; }
                 @foreach (var package in summerPackages)
                 {
@@ -285,15 +323,19 @@
                     var dateStr = $"{package.DefaultStartDate:MMM d} - {package.DefaultEndDate:MMM d, yyyy}";
                     <div class="group cursor-pointer reveal @delayClass" 
                          onclick="openBookingModal('@package.Destination.Replace("'", "\\'")', '@package.Description.Replace("'", "\\'")', '$@package.Price.ToString("N0")', '@dateStr', 'summer', '@package.ImageUrl', @package.Id)">
-                        <div class="img-container relative h-[500px] w-full mb-6 overflow-hidden rounded-sm">
+                        <div class="img-container relative h-[320px] sm:h-[400px] md:h-[500px] w-full mb-4 sm:mb-6 overflow-hidden rounded-lg sm:rounded-sm">
                             <img src="@package.ImageUrl" alt="@package.Destination" class="w-full h-full object-cover">
-                            <div class="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-3 py-1 text-xs text-white uppercase tracking-wider border border-white/20">@dateStr</div>
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
-                            <div class="absolute bottom-4 right-4 bg-amber-400/80 backdrop-blur-sm px-4 py-2 rounded-full text-stone-900 text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                            <div class="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/10 backdrop-blur-md px-2.5 py-1 text-[10px] sm:text-xs text-white uppercase tracking-wider border border-white/20 rounded-sm">@dateStr</div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-70 sm:opacity-60 group-hover:opacity-40 transition-opacity"></div>
+                            <div class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-amber-400/80 backdrop-blur-sm px-4 py-2 rounded-full text-stone-900 text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 book-now-btn">
                                 Book Now
                             </div>
+                            <div class="absolute bottom-3 left-3 sm:hidden">
+                                <h3 class="text-lg font-heading text-white drop-shadow-lg">@package.Destination</h3>
+                                <span class="text-amber-200/80 text-xs font-medium">$@package.Price.ToString("N0")</span>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-start">
+                        <div class="hidden sm:flex justify-between items-start">
                             <div>
                                 <h3 class="text-2xl font-heading text-white group-hover:text-amber-300 transition-colors">@package.Destination</h3>
                                 <p class="text-stone-500 text-sm mt-1">@package.Description</p>
@@ -308,19 +350,19 @@
     </section>
 
     <!-- SECTION 3: AUTUMN -->
-    <section id="autumn" class="relative py-32 px-6 border-t border-white/5 min-h-screen flex items-center" data-season="autumn">
+    <section id="autumn" class="relative py-16 sm:py-24 md:py-32 px-5 sm:px-6 border-t border-white/5 min-h-screen flex items-center" data-season="autumn">
         <div class="max-w-7xl mx-auto w-full">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-16 reveal">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 sm:mb-12 md:mb-16 reveal">
                 <div>
                     <span class="text-orange-300 text-xs tracking-[0.3em] uppercase block mb-3 flex items-center gap-2"><i data-lucide="leaf" class="w-4 h-4"></i> Transformation</span>
-                    <h2 class="text-4xl md:text-6xl font-heading text-white">Autumnal Gold</h2>
+                    <h2 class="text-3xl sm:text-4xl md:text-6xl font-heading text-white">Autumnal Gold</h2>
                 </div>
-                <div class="mt-6 md:mt-0">
+                <div class="mt-4 md:mt-0">
                     <p class="text-stone-400 max-w-sm text-sm leading-7">The earth takes a deep breath. Crisp air, harvest feasts, and landscapes painted in fire and copper.</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
                 @{ var autumnPackages = Model.TravelPackages.Where(p => p.Season == "autumn").ToList(); var autumnIndex = 0; }
                 @foreach (var package in autumnPackages)
                 {
@@ -328,15 +370,19 @@
                     var dateStr = $"{package.DefaultStartDate:MMM d} - {package.DefaultEndDate:MMM d, yyyy}";
                     <div class="group cursor-pointer reveal @delayClass" 
                          onclick="openBookingModal('@package.Destination.Replace("'", "\\'")', '@package.Description.Replace("'", "\\'")', '$@package.Price.ToString("N0")', '@dateStr', 'autumn', '@package.ImageUrl', @package.Id)">
-                        <div class="img-container relative h-[500px] w-full mb-6 overflow-hidden rounded-sm">
+                        <div class="img-container relative h-[320px] sm:h-[400px] md:h-[500px] w-full mb-4 sm:mb-6 overflow-hidden rounded-lg sm:rounded-sm">
                             <img src="@package.ImageUrl" alt="@package.Destination" class="w-full h-full object-cover">
-                            <div class="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-3 py-1 text-xs text-white uppercase tracking-wider border border-white/20">@dateStr</div>
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
-                            <div class="absolute bottom-4 right-4 bg-orange-400/80 backdrop-blur-sm px-4 py-2 rounded-full text-white text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                            <div class="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/10 backdrop-blur-md px-2.5 py-1 text-[10px] sm:text-xs text-white uppercase tracking-wider border border-white/20 rounded-sm">@dateStr</div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-70 sm:opacity-60 group-hover:opacity-40 transition-opacity"></div>
+                            <div class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-orange-400/80 backdrop-blur-sm px-4 py-2 rounded-full text-white text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 book-now-btn">
                                 Book Now
                             </div>
+                            <div class="absolute bottom-3 left-3 sm:hidden">
+                                <h3 class="text-lg font-heading text-white drop-shadow-lg">@package.Destination</h3>
+                                <span class="text-orange-200/80 text-xs font-medium">$@package.Price.ToString("N0")</span>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-start">
+                        <div class="hidden sm:flex justify-between items-start">
                             <div>
                                 <h3 class="text-2xl font-heading text-white group-hover:text-orange-300 transition-colors">@package.Destination</h3>
                                 <p class="text-stone-500 text-sm mt-1">@package.Description</p>
@@ -351,19 +397,19 @@
     </section>
 
     <!-- SECTION 4: WINTER -->
-    <section id="winter" class="relative py-32 px-6 border-t border-white/5 min-h-screen flex items-center" data-season="winter">
+    <section id="winter" class="relative py-16 sm:py-24 md:py-32 px-5 sm:px-6 border-t border-white/5 min-h-screen flex items-center" data-season="winter">
         <div class="max-w-7xl mx-auto w-full">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-16 reveal">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 sm:mb-12 md:mb-16 reveal">
                 <div>
                     <span class="text-cyan-300 text-xs tracking-[0.3em] uppercase block mb-3 flex items-center gap-2"><i data-lucide="snowflake" class="w-4 h-4"></i> Silence</span>
-                    <h2 class="text-4xl md:text-6xl font-heading text-white">Arctic Wonder</h2>
+                    <h2 class="text-3xl sm:text-4xl md:text-6xl font-heading text-white">Arctic Wonder</h2>
                 </div>
-                <div class="mt-6 md:mt-0">
+                <div class="mt-4 md:mt-0">
                     <p class="text-stone-400 max-w-sm text-sm leading-7">Pure white landscapes and dancing auroras. Find warmth in the coldest places on earth.</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
                 @{ var winterPackages = Model.TravelPackages.Where(p => p.Season == "winter").ToList(); var winterIndex = 0; }
                 @foreach (var package in winterPackages)
                 {
@@ -371,15 +417,19 @@
                     var dateStr = $"{package.DefaultStartDate:MMM d} - {package.DefaultEndDate:MMM d, yyyy}";
                     <div class="group cursor-pointer reveal @delayClass" 
                          onclick="openBookingModal('@package.Destination.Replace("'", "\\'")', '@package.Description.Replace("'", "\\'")', '$@package.Price.ToString("N0")', '@dateStr', 'winter', '@package.ImageUrl', @package.Id)">
-                        <div class="img-container relative h-[500px] w-full mb-6 overflow-hidden rounded-sm">
+                        <div class="img-container relative h-[320px] sm:h-[400px] md:h-[500px] w-full mb-4 sm:mb-6 overflow-hidden rounded-lg sm:rounded-sm">
                             <img src="@package.ImageUrl" alt="@package.Destination" class="w-full h-full object-cover">
-                            <div class="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-3 py-1 text-xs text-white uppercase tracking-wider border border-white/20">@dateStr</div>
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
-                            <div class="absolute bottom-4 right-4 bg-cyan-400/80 backdrop-blur-sm px-4 py-2 rounded-full text-stone-900 text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                            <div class="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/10 backdrop-blur-md px-2.5 py-1 text-[10px] sm:text-xs text-white uppercase tracking-wider border border-white/20 rounded-sm">@dateStr</div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-70 sm:opacity-60 group-hover:opacity-40 transition-opacity"></div>
+                            <div class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-cyan-400/80 backdrop-blur-sm px-4 py-2 rounded-full text-stone-900 text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 book-now-btn">
                                 Book Now
                             </div>
+                            <div class="absolute bottom-3 left-3 sm:hidden">
+                                <h3 class="text-lg font-heading text-white drop-shadow-lg">@package.Destination</h3>
+                                <span class="text-cyan-200/80 text-xs font-medium">$@package.Price.ToString("N0")</span>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-start">
+                        <div class="hidden sm:flex justify-between items-start">
                             <div>
                                 <h3 class="text-2xl font-heading text-white group-hover:text-cyan-300 transition-colors">@package.Destination</h3>
                                 <p class="text-stone-500 text-sm mt-1">@package.Description</p>
@@ -394,50 +444,50 @@
     </section>
 
     <!-- Booking Modal -->
-    <div id="bookingModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" style="background: rgba(0,0,0,0.9);">
+    <div id="bookingModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-0 sm:p-4" style="background: rgba(0,0,0,0.9);">
         <!-- Modal Background Image -->
-        <div id="modalBackground" class="absolute inset-0 transition-opacity duration-700" style="opacity: 0;">
+        <div id="modalBackground" class="absolute inset-0 transition-opacity duration-700 hidden sm:block" style="opacity: 0;">
             <img id="modalBackgroundImage" src="" alt="" class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-black/40"></div>
         </div>
-        
+
         <!-- Modal Particle Canvas -->
-        <canvas id="modalCanvas" class="absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-700" style="opacity: 0;"></canvas>
-        
+        <canvas id="modalCanvas" class="absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-700 hidden sm:block" style="opacity: 0;"></canvas>
+
         <!-- Modal Content -->
-        <div class="relative bg-stone-900/95 backdrop-blur-xl max-w-2xl w-full rounded-lg shadow-2xl border border-white/20 overflow-hidden transform transition-all" id="modalContent" style="transform: scale(0.9); opacity: 0;">
+        <div class="relative bg-stone-900 sm:bg-stone-900/95 backdrop-blur-xl max-w-2xl w-full h-full sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-lg shadow-2xl sm:border border-white/20 overflow-hidden transform transition-all flex flex-col" id="modalContent" style="transform: scale(0.9); opacity: 0;">
             <!-- Modal Header -->
-            <div class="relative p-8 border-b border-white/10">
-                <button onclick="closeBookingModal()" class="absolute top-4 right-4 bg-white/10 backdrop-blur-md hover:bg-white/20 rounded-full p-2 transition-colors z-10">
+            <div class="relative p-5 sm:p-6 md:p-8 border-b border-white/10 shrink-0">
+                <button onclick="closeBookingModal()" class="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/10 backdrop-blur-md hover:bg-white/20 rounded-full p-2 transition-colors z-10">
                     <i data-lucide="x" class="w-5 h-5 text-white"></i>
                 </button>
-                
-                <div class="flex items-center gap-2 mb-3">
-                    <span id="modalSeasonBadge" class="text-xs uppercase tracking-wider px-3 py-1 rounded-full"></span>
-                    <span id="modalDates" class="text-xs text-stone-400 flex items-center gap-1">
+
+                <div class="flex items-center gap-2 mb-2 sm:mb-3">
+                    <span id="modalSeasonBadge" class="text-[10px] sm:text-xs uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full"></span>
+                    <span id="modalDates" class="text-[10px] sm:text-xs text-stone-400 flex items-center gap-1">
                         <i data-lucide="calendar" class="w-3 h-3"></i>
                         <span id="modalDatesText"></span>
                     </span>
                 </div>
-                <h3 id="modalTitle" class="text-4xl font-heading text-white mb-2"></h3>
-                <p id="modalSubtitle" class="text-stone-400 flex items-center gap-2">
-                    <i data-lucide="map-pin" class="w-4 h-4"></i>
+                <h3 id="modalTitle" class="text-2xl sm:text-3xl md:text-4xl font-heading text-white mb-1 sm:mb-2 pr-8"></h3>
+                <p id="modalSubtitle" class="text-stone-400 flex items-center gap-2 text-sm">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"></i>
                     <span id="modalSubtitleText"></span>
                 </p>
             </div>
 
             <!-- Modal Body -->
-            <div class="p-8 max-h-[70vh] overflow-y-auto">
-                <div class="mb-6 pb-6 border-b border-white/10">
-                    <div class="flex items-end justify-between">
+            <div class="p-5 sm:p-6 md:p-8 overflow-y-auto flex-1">
+                <div class="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-white/10">
+                    <div class="flex items-end justify-between gap-4">
                         <div>
-                            <span class="text-stone-400 text-xs uppercase tracking-wider block mb-1">Starting from</span>
-                            <span id="modalPrice" class="text-5xl font-heading text-white"></span>
-                            <span class="text-stone-400 text-sm ml-2">per person</span>
+                            <span class="text-stone-400 text-[10px] sm:text-xs uppercase tracking-wider block mb-1">Starting from</span>
+                            <span id="modalPrice" class="text-3xl sm:text-4xl md:text-5xl font-heading text-white"></span>
+                            <span class="text-stone-400 text-xs sm:text-sm ml-1 sm:ml-2">per person</span>
                         </div>
-                        <div class="text-right">
-                            <span class="text-stone-400 text-xs uppercase tracking-wider block mb-1">Duration</span>
-                            <span class="text-white text-lg font-medium" id="modalDuration"></span>
+                        <div class="text-right shrink-0">
+                            <span class="text-stone-400 text-[10px] sm:text-xs uppercase tracking-wider block mb-1">Duration</span>
+                            <span class="text-white text-base sm:text-lg font-medium" id="modalDuration"></span>
                         </div>
                     </div>
                 </div>
@@ -510,20 +560,20 @@
                         </div>
                     </div>
 
-                    <div class="flex gap-3 pt-4">
-                        <button type="button" onclick="closeBookingModal()" class="flex-1 px-6 py-3 border border-white/30 rounded text-white hover:bg-white/10 transition-all font-medium tracking-wide">
+                    <div class="flex flex-col-reverse sm:flex-row gap-3 pt-4">
+                        <button type="button" onclick="closeBookingModal()" class="flex-1 px-5 sm:px-6 py-3 border border-white/30 rounded text-white hover:bg-white/10 transition-all font-medium tracking-wide text-sm sm:text-base">
                             Cancel
                         </button>
                         @if (Model.IsAuthenticated)
                         {
-                            <button type="submit" class="flex-1 px-6 py-3 bg-amber-200 hover:bg-amber-100 rounded text-stone-900 font-bold tracking-wide transition-all shadow-lg hover:shadow-amber-200/20">
+                            <button type="submit" class="flex-1 px-5 sm:px-6 py-3.5 sm:py-3 bg-amber-200 hover:bg-amber-100 rounded text-stone-900 font-bold tracking-wide transition-all shadow-lg hover:shadow-amber-200/20 text-sm sm:text-base">
                                 <i data-lucide="shopping-bag" class="w-4 h-4 inline mr-2"></i>
                                 Add to Cart
                             </button>
                         }
                         else
                         {
-                            <a href="/Account/Login" class="flex-1 px-6 py-3 bg-amber-200 hover:bg-amber-100 rounded text-stone-900 font-bold tracking-wide transition-all shadow-lg hover:shadow-amber-200/20 text-center">
+                            <a href="/Account/Login" class="flex-1 px-5 sm:px-6 py-3.5 sm:py-3 bg-amber-200 hover:bg-amber-100 rounded text-stone-900 font-bold tracking-wide transition-all shadow-lg hover:shadow-amber-200/20 text-center text-sm sm:text-base">
                                 Login to Book
                             </a>
                         }
@@ -535,7 +585,7 @@
 
     <!-- Footer -->
     <footer class="relative z-10 border-t border-white/10 py-6">
-        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center flex-wrap gap-4">
+        <div class="max-w-7xl mx-auto px-5 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
             <span class="text-stone-400 text-sm font-body">&copy; 2026 Kaelar</span>
             <div class="flex items-center gap-5">
                 <a href="mailto:anasmouqine@gmail.com" title="Email" class="text-stone-400 hover:text-amber-200 transition-colors">

@@ -65,22 +65,34 @@ namespace project
                 
                 try
                 {
-                    // If TravelPackages table doesn't exist (e.g. Railway DB has stale
-                    // __EFMigrationsHistory from a prior rolled-back migration), wipe the
-                    // history so EF Core re-applies all migrations cleanly.
-                    if (!TableExists(context, "TravelPackages"))
+                    if (connectionString!.StartsWith("Host="))
                     {
-                        context.Database.ExecuteSqlRaw(
-                            "DROP TABLE IF EXISTS \"__EFMigrationsHistory\"");
+                        // PostgreSQL (Railway): avoid SQL Server-generated migrations.
+                        // If tables are missing or in a stale state, drop everything
+                        // and let Npgsql recreate the schema natively via EnsureCreated.
+                        if (!TableExists(context, "TravelPackages"))
+                        {
+                            logger.LogInformation("Tables missing — recreating PostgreSQL schema.");
+                            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"CartItems\" CASCADE");
+                            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"Bookings\" CASCADE");
+                            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"Users\" CASCADE");
+                            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"TravelPackages\" CASCADE");
+                            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"__EFMigrationsHistory\"");
+                            context.Database.EnsureCreated();
+                            logger.LogInformation("PostgreSQL schema created successfully.");
+                        }
+                    }
+                    else
+                    {
+                        context.Database.Migrate();
                     }
 
-                    context.Database.Migrate();
                     await SeedTravelPackagesAsync(context, logger);
                     await SeedAdminUserAsync(context, logger);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "An error occurred while migrating the database.");
+                    logger.LogError(ex, "An error occurred while setting up the database.");
                 }
             }
 

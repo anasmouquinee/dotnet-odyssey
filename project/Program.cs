@@ -12,6 +12,9 @@ namespace project
     {
         public static async Task Main(string[] args)
         {
+            // Allow Npgsql to accept DateTime values with DateTimeKind.Unspecified
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.

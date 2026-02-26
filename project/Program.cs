@@ -22,9 +22,7 @@ namespace project
             if (connectionString!.StartsWith("postgresql://") || connectionString.StartsWith("postgres://"))
                 connectionString = ConvertPostgresUrlToNpgsql(connectionString);
 
-            var isPostgres = builder.Environment.IsProduction() || connectionString.StartsWith("Host=");
-
-            if (isPostgres)
+            if (builder.Environment.IsProduction() || connectionString.StartsWith("Host="))
             {
                 builder.Services.AddDbContext<ApplicationDbContext>(options =>
                     options.UseNpgsql(connectionString));
@@ -67,56 +65,32 @@ namespace project
                 
                 try
                 {
-                    logger.LogInformation("DB setup starting. isPostgres={IsPostgres}", isPostgres);
-
-                    if (isPostgres)
+                    if (context.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL")
                     {
-                        var tableExists = TableExists(connectionString!, "TravelPackages");
-                        logger.LogInformation("TableExists(TravelPackages)={Exists}", tableExists);
-
-                        if (!tableExists)
-                        {
-                            logger.LogInformation("Tables missing — dropping stale objects and recreating schema.");
-                            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"CartItems\" CASCADE");
-                            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"Bookings\" CASCADE");
-                            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"Users\" CASCADE");
-                            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"TravelPackages\" CASCADE");
-                            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"__EFMigrationsHistory\"");
-                            var created = context.Database.EnsureCreated();
-                            logger.LogInformation("EnsureCreated={Created}", created);
-                        }
+                        // Migrations were generated for SQL Server; apply the schema
+                        // directly from the current model when running on PostgreSQL.
+                        context.Database.EnsureCreated();
                     }
                     else
                     {
                         context.Database.Migrate();
                     }
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "DB schema setup failed.");
-                    throw; // Rethrow to ensure startup fails and logs are visible
-                }
 
-                try
-                {
                     await SeedTravelPackagesAsync(context, logger);
                     await SeedAdminUserAsync(context, logger);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "DB seeding failed.");
-                    throw; // Rethrow to seed failure visibility
+                    logger.LogError(ex, "An error occurred while migrating the database.");
                 }
             }
 
             // Configure the HTTP request pipeline.
-            // For debugging purposes, enable Developer Exception Page even in Production
-            // if (!app.Environment.IsDevelopment())
-            // {
-            //    app.UseExceptionHandler("/Error");
-            //    app.UseHsts();
-            // }
-            app.UseDeveloperExceptionPage();
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseExceptionHandler("/Error");
+                app.UseHsts();
+            }
 
             app.UseHttpsRedirection();
 
@@ -211,19 +185,6 @@ namespace project
             await context.TravelPackages.AddRangeAsync(packages);
             await context.SaveChangesAsync();
             logger.LogInformation("Seeded {Count} travel packages.", packages.Length);
-        }
-
-        private static bool TableExists(string connectionString, string tableName)
-        {
-            try
-            {
-                using var conn = new NpgsqlConnection(connectionString);
-                conn.Open();
-                using var cmd = conn.CreateCommand();
-                cmd.CommandText = $"SELECT 1 FROM information_schema.tables WHERE table_name = '{tableName}' AND table_schema = 'public'";
-                return cmd.ExecuteScalar() != null;
-            }
-            catch { return false; }
         }
 
         private static string ConvertPostgresUrlToNpgsql(string url)

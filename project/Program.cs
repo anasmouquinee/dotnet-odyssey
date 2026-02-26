@@ -65,6 +65,15 @@ namespace project
                 
                 try
                 {
+                    // If TravelPackages table doesn't exist (e.g. Railway DB has stale
+                    // __EFMigrationsHistory from a prior rolled-back migration), wipe the
+                    // history so EF Core re-applies all migrations cleanly.
+                    if (!TableExists(context, "TravelPackages"))
+                    {
+                        context.Database.ExecuteSqlRaw(
+                            "DROP TABLE IF EXISTS \"__EFMigrationsHistory\"");
+                    }
+
                     context.Database.Migrate();
                     await SeedTravelPackagesAsync(context, logger);
                     await SeedAdminUserAsync(context, logger);

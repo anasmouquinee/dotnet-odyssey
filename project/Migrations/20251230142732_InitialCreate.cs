@@ -118,25 +118,6 @@ namespace project.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "TravelPackages",
-                columns: new[] { "Id", "DefaultEndDate", "DefaultStartDate", "Description", "Destination", "DurationDays", "ImageUrl", "IsActive", "Price", "Season" },
-                values: new object[,]
-                {
-                    { 1, new DateTime(2025, 4, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 4, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Philosopher's Path Walk", "Kyoto, Japan", 14, "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=2070&auto=format&fit=crop", true, 4200m, "spring" },
-                    { 2, new DateTime(2025, 5, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 4, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), "Private Tulip Fields Tour", "Keukenhof, Holland", 15, "https://images.unsplash.com/photo-1460500063983-994d4c27756c?q=80&w=2070&auto=format&fit=crop", true, 3100m, "spring" },
-                    { 3, new DateTime(2025, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 10, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), "Austral Spring Trek", "Patagonia, Chile", 15, "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=2070&auto=format&fit=crop", true, 5800m, "spring" },
-                    { 4, new DateTime(2025, 6, 30, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 6, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), "Private Yacht Charter", "Amalfi Coast, Italy", 15, "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=2560&auto=format&fit=crop", true, 6500m, "summer" },
-                    { 5, new DateTime(2025, 7, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 7, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), "Caldera Sunset Villas", "Santorini, Greece", 15, "https://images.unsplash.com/photo-1601581875309-fafbf2d3ed2a?q=80&w=2574&auto=format&fit=crop", true, 5200m, "summer" },
-                    { 6, new DateTime(2025, 8, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 8, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), "Overwater Sanctuary", "Baa Atoll, Maldives", 10, "https://images.unsplash.com/photo-1540206351-d6465b3ac5c1?q=80&w=2664&auto=format&fit=crop", true, 8900m, "summer" },
-                    { 7, new DateTime(2025, 10, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), "New England Foliage Tour", "Vermont, USA", 15, "https://images.unsplash.com/photo-1509565840034-3c385bbe6451?q=80&w=2000&auto=format&fit=crop", true, 3800m, "autumn" },
-                    { 8, new DateTime(2025, 10, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Castle & Forest Route", "Bavaria, Germany", 14, "https://images.unsplash.com/photo-1505307469735-373801f95c47?q=80&w=2670&auto=format&fit=crop", true, 4500m, "autumn" },
-                    { 9, new DateTime(2025, 11, 30, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), "Momiji Maple Viewing", "Arashiyama, Japan", 15, "https://images.unsplash.com/photo-1476611317561-60e1b778edfb?q=80&w=2670&auto=format&fit=crop", true, 4800m, "autumn" },
-                    { 10, new DateTime(2026, 1, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 12, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), "Aurora Glass Igloos", "Lapland, Finland", 26, "https://images.unsplash.com/photo-1518182170546-0766ce6fec56?q=80&w=2000&auto=format&fit=crop", true, 5500m, "winter" },
-                    { 11, new DateTime(2026, 2, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), "Matterhorn Ski Chalet", "Zermatt, Switzerland", 26, "https://images.unsplash.com/photo-1551524357-1249fa6b2eb1?q=80&w=2670&auto=format&fit=crop", true, 7200m, "winter" },
-                    { 12, new DateTime(2026, 3, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), "Luxury Winter Retreat", "Aspen, USA", 13, "https://images.unsplash.com/photo-1518096366620-33062d35508a?q=80&w=2670&auto=format&fit=crop", true, 9500m, "winter" }
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_Bookings_TravelPackageId",
                 table: "Bookings",

@@ -94,6 +94,7 @@ namespace project
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "DB schema setup failed.");
+                    throw; // Rethrow to ensure startup fails and logs are visible
                 }
 
                 try
@@ -104,15 +105,18 @@ namespace project
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "DB seeding failed.");
+                    throw; // Rethrow to seed failure visibility
                 }
             }
 
             // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Error");
-                app.UseHsts();
-            }
+            // For debugging purposes, enable Developer Exception Page even in Production
+            // if (!app.Environment.IsDevelopment())
+            // {
+            //    app.UseExceptionHandler("/Error");
+            //    app.UseHsts();
+            // }
+            app.UseDeveloperExceptionPage();
 
             app.UseHttpsRedirection();
 

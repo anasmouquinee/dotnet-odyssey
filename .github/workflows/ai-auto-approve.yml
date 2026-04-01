@@ -1,0 +1,20 @@
+name: AI Auto-Approve Bookings
+
+on:
+  schedule:
+    # Run at the top of every hour
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allow manual trigger from the GitHub Actions tab
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Trigger AI Approval Endpoint
+        run: |
+          # Replace YOUR_PRODUCTION_URL with your actual deployed app url, e.g., https://odyssey-travel.up.railway.app
+          curl -X POST "https://YOUR_PRODUCTION_URL/api/cron/auto-approve" \
+               -H "Authorization: Bearer ${{ secrets.CRON_SECRET_KEY }}" \
+               -H "Content-Type: application/json" \
+               -d '{}'

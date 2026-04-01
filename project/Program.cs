@@ -5,6 +5,7 @@ using Npgsql;
 using project.Data;
 using project.Models;
 using project.Services;
+using QRCoder;
 
 namespace project
 {
@@ -63,7 +64,11 @@ namespace project
             builder.Services.AddScoped<IBookingService, BookingService>();
             builder.Services.AddScoped<ITravelPackageService, TravelPackageService>();
             builder.Services.AddScoped<IAdminService, AdminService>();
-            
+
+            // Add AI & Notification services
+            builder.Services.AddScoped<IAdminNotificationService, AdminNotificationService>();
+            builder.Services.AddScoped<IAIApprovalService, AIApprovalService>();
+
             // Add HttpClient for external API calls
             builder.Services.AddHttpClient<IDestinationApiService, DestinationApiService>();
 
@@ -116,6 +121,68 @@ namespace project
             {
                 var suggestions = await destinationService.SearchDestinationsAsync(query ?? "", season);
                 return Results.Json(new { suggestions });
+            });
+
+            // Minimal API endpoint for CRON job to trigger AI approvals
+            app.MapPost("/api/cron/auto-approve", async (HttpRequest request, IAIApprovalService aiApprovalService, IConfiguration config) =>
+            {
+                // CRON jobs should send a secret key in the Authorization header to prevent random public calls
+                var authHeader = request.Headers["Authorization"].FirstOrDefault();
+                var expectedSecret = config["Cron:SecretKey"] ?? "dev-default-cron-secret";
+
+                if (authHeader != $"Bearer {expectedSecret}")
+                {
+                    return Results.Unauthorized();
+                }
+
+                var processedCount = await aiApprovalService.ProcessPendingBookingsAsync();
+                return Results.Ok(new { message = "Auto-approval cron executed successfully", processed = processedCount });
+            });
+
+            // QR Code generation endpoint
+            app.MapGet("/api/qr/generate/{packageId}", (int packageId) =>
+            {
+                try
+                {
+                    var viewerUrl = $"{app.Configuration["AppUrl"] ?? "https://localhost:7001"}/destination/view?id={packageId}";
+
+                    using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+                    {
+                        QRCodeData qrCodeData = qrGenerator.CreateQrCode(viewerUrl, QRCodeGenerator.ECCLevel.Q);
+                        using (var qrCode = new PngByteQRCode(qrCodeData))
+                        {
+                            byte[] qrCodeImage = qrCode.GetGraphic(20);
+                            return Results.File(qrCodeImage, "image/png", $"destination-{packageId}-qr.png");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return Results.BadRequest(new { error = ex.Message });
+                }
+            });
+
+            // Destination details endpoint for mobile viewer
+            app.MapGet("/api/destination/{packageId}", async (int packageId, ApplicationDbContext db) =>
+            {
+                var package = await db.TravelPackages.FirstOrDefaultAsync(p => p.Id == packageId);
+
+                if (package == null)
+                    return Results.NotFound(new { error = "Package not found" });
+
+                return Results.Json(new
+                {
+                    id = package.Id,
+                    destination = package.Destination,
+                    description = package.Description,
+                    price = package.Price,
+                    season = package.Season,
+                    imageUrl = package.ImageUrl,
+                    durationDays = package.DurationDays,
+                    defaultStartDate = package.DefaultStartDate,
+                    defaultEndDate = package.DefaultEndDate,
+                    isActive = package.IsActive
+                });
             });
 
             app.MapStaticAssets();

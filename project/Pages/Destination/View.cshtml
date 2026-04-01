@@ -1,0 +1,226 @@
+@page "{id:int}"
+@model project.Pages.Destination.ViewPageModel
+@{
+    ViewData["Title"] = $"{Model.Package.Destination} - Viewer";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@Model.Package.Destination</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    @if (!string.IsNullOrEmpty(Model.GoogleMapsApiKey))
+    {
+        <script src="https://maps.googleapis.com/maps/api/js?key=@Model.GoogleMapsApiKey"></script>
+    }
+    <style>
+        .gallery-image {
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .gallery-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .gallery-image.active {
+            box-shadow: 0 0 0 3px #3b82f6;
+        }
+        #streetViewContainer {
+            width: 100%;
+            height: 400px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .preview-toggle {
+            transition: all 0.3s ease;
+        }
+        .preview-toggle.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 shadow-lg sticky top-0 z-50">
+            <div class="max-w-6xl mx-auto flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold">@Model.Package.Destination</h1>
+                    <p class="text-blue-100 text-sm capitalize">@Model.Package.Season Season • @Model.Package.DurationDays days</p>
+                </div>
+                <button onclick="history.back()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition">
+                    ← Back
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 max-w-6xl mx-auto w-full p-4 md:p-6">
+            <!-- Hero Image -->
+            <div class="mb-6 rounded-lg overflow-hidden shadow-2xl">
+                <img id="heroImage" src="@Model.Package.ImageUrl" alt="@Model.Package.Destination" class="w-full h-96 object-cover" />
+            </div>
+
+            <!-- Description -->
+            <div class="bg-gray-800 rounded-lg p-6 mb-6 shadow-lg">
+                <h2 class="text-2xl font-bold mb-2">@Model.Package.Description</h2>
+                <p class="text-gray-300 mb-4">Experience the beauty of @Model.Package.Destination in the @Model.Package.Season season.</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <p class="text-gray-400 text-sm">Duration</p>
+                        <p class="text-xl font-bold text-blue-400">@Model.Package.DurationDays days</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Price per Person</p>
+                        <p class="text-xl font-bold text-green-400">${@Model.Package.Price}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Season</p>
+                        <p class="text-xl font-bold text-purple-400 capitalize">@Model.Package.Season</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Status</p>
+                        <p class="text-xl font-bold text-emerald-400">@(Model.Package.IsActive ? "Available" : "Unavailable")</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Mode Toggle -->
+            <div class="mb-6 flex gap-3 sticky top-20 z-40 bg-gray-900 p-4 rounded-lg">
+                <button id="gallery-toggle" class="preview-toggle active flex-1 py-3 rounded-lg font-semibold bg-blue-600 hover:bg-blue-700 transition" onclick="toggleGallery(true)">
+                    📷 2D Gallery
+                </button>
+                <button id="street-view-toggle" class="preview-toggle flex-1 py-3 rounded-lg font-semibold bg-gray-700 hover:bg-gray-600 transition" onclick="toggleGallery(false)">
+                    🌍 Street View
+                </button>
+            </div>
+
+            <!-- 2D Gallery Section -->
+            <section id="gallery-section" class="mb-8">
+                <h3 class="text-xl font-bold mb-4">Image Gallery</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <img src="@Model.Package.ImageUrl" alt="Main" class="gallery-image active rounded-lg h-48 object-cover cursor-pointer shadow-lg" onclick="updateHeroImage('@Model.Package.ImageUrl')" />
+                    <div class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg h-48 flex items-center justify-center text-center p-2 gallery-image shadow-lg" onclick="showComingSoon()">
+                        <div>
+                            <p class="text-3xl">📸</p>
+                            <p class="text-sm mt-2">Additional Images Coming Soon</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-500 to-teal-600 rounded-lg h-48 flex items-center justify-center text-center p-2 gallery-image shadow-lg" onclick="showComingSoon()">
+                        <div>
+                            <p class="text-3xl">🎥</p>
+                            <p class="text-sm mt-2">360° Videos Coming Soon</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-500 to-red-600 rounded-lg h-48 flex items-center justify-center text-center p-2 gallery-image shadow-lg" onclick="showComingSoon()">
+                        <div>
+                            <p class="text-3xl">🗺️</p>
+                            <p class="text-sm mt-2">Interactive Map</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Street View Section (Hidden by default) -->
+            <section id="street-view-section" class="hidden mb-8">
+                <h3 class="text-xl font-bold mb-4">Street View Experience</h3>
+                <div id="streetViewContainer" class="shadow-lg"></div>
+                <p class="text-gray-400 text-sm mt-3">📍 Explore @Model.Package.Destination from street level. Pan, zoom, and navigate around this amazing destination.</p>
+                <button onclick="initStreetView()" class="mt-4 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-semibold transition">
+                    Load Street View
+                </button>
+            </section>
+
+            <!-- CTA Section -->
+            <section class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 text-center shadow-xl mt-8">
+                <h3 class="text-3xl font-bold mb-3">Ready to Explore?</h3>
+                <p class="text-blue-100 mb-6">Book your adventure to @Model.Package.Destination today and experience this magical destination.</p>
+                <button onclick="bookNow()" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg font-bold text-lg transition transform hover:scale-105">
+                    ✈️ Book Now
+                </button>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 border-t border-gray-700 p-4 text-center text-gray-400 text-sm mt-8">
+            <p>&copy; 2025 Odyssey Travel. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        function updateHeroImage(imageUrl) {
+            document.getElementById('heroImage').src = imageUrl;
+            document.querySelectorAll('.gallery-image').forEach(img => img.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function showComingSoon() {
+            alert('This feature is coming soon! 🚀');
+        }
+
+        function toggleGallery(showGallery) {
+            const gallerySection = document.getElementById('gallery-section');
+            const streetViewSection = document.getElementById('street-view-section');
+            const galleryToggle = document.getElementById('gallery-toggle');
+            const streetViewToggle = document.getElementById('street-view-toggle');
+
+            if (showGallery) {
+                gallerySection.classList.remove('hidden');
+                streetViewSection.classList.add('hidden');
+                galleryToggle.classList.add('active');
+                streetViewToggle.classList.remove('active');
+            } else {
+                gallerySection.classList.add('hidden');
+                streetViewSection.classList.remove('hidden');
+                galleryToggle.classList.remove('active');
+                streetViewToggle.classList.add('active');
+            }
+        }
+
+        function initStreetView() {
+            const streetViewContainer = document.getElementById('streetViewContainer');
+            
+            // Approximate coordinates for the destination (you can enhance this with real geocoding)
+            const coordinates = getDestinationCoordinates('@Model.Package.Destination');
+            
+            const streetView = new google.maps.StreetViewPanorama(
+                streetViewContainer,
+                {
+                    position: coordinates,
+                    pov: { heading: 165, pitch: 0 },
+                    zoom: 1,
+                    enableCloseButton: true,
+                }
+            );
+        }
+
+        function getDestinationCoordinates(destination) {
+            // Hardcoded coordinates for seeded destinations
+            const coordinates = {
+                'Kyoto, Japan': { lat: 35.0116, lng: 135.7681 },
+                'Keukenhof, Holland': { lat: 52.2691, lng: 4.5464 },
+                'Patagonia, Chile': { lat: -50.5, lng: -72.5 },
+                'Amalfi Coast, Italy': { lat: 40.6333, lng: 14.5981 },
+                'Santorini, Greece': { lat: 36.3932, lng: 25.4615 },
+                'Baa Atoll, Maldives': { lat: 5.2, lng: 73.15 },
+                'Vermont, USA': { lat: 43.945, lng: -72.71 },
+                'Bavaria, Germany': { lat: 47.9, lng: 10.77 },
+                'Arashiyama, Japan': { lat: 35.0158, lng: 135.6733 },
+                'Lapland, Finland': { lat: 66.5, lng: 25.5 },
+                'Zermatt, Switzerland': { lat: 46.0207, lng: 7.7491 },
+                'Aspen, USA': { lat: 39.1911, lng: -106.8175 }
+            };
+            
+            return coordinates[destination] || { lat: 0, lng: 0 };
+        }
+
+        function bookNow() {
+            // Redirect to booking page with this package pre-selected
+            window.location.href = `/bookings?packageId=@Model.Package.Id`;
+        }
+    </script>
+</body>
+</html>

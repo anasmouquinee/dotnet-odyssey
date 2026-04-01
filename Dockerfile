@@ -12,11 +12,12 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
+# Ensure appsettings files are included
+COPY project/appsettings.json ./
+COPY project/appsettings.Production.json ./
+
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
-EXPOSE 8080
-
-ENTRYPOINT ["dotnet", "project.dll"]
 EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "project.dll"]

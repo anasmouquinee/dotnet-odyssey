@@ -15,8 +15,9 @@ COPY --from=build /app/publish .
 # Copy appsettings files - use wildcard to ensure they're included
 COPY project/appsettings*.json ./
 
+# Set environment variables
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
-EXPOSE 8080
 
+EXPOSE 8080
 ENTRYPOINT ["dotnet", "project.dll"]

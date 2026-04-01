@@ -12,9 +12,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Ensure appsettings files are included
-COPY project/appsettings.json ./
-COPY project/appsettings.Production.json ./
+# Copy appsettings files - use wildcard to ensure they're included
+COPY project/appsettings*.json ./
 
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production

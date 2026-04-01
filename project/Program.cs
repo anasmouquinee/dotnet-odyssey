@@ -145,11 +145,19 @@ namespace project
             });
 
             // QR Code generation endpoint
-            app.MapGet("/api/qr/generate/{packageId}", (int packageId) =>
+            app.MapGet("/api/qr/generate/{packageId}", (int packageId, HttpRequest request) =>
             {
                 try
                 {
-                    var viewerUrl = $"{app.Configuration["AppUrl"] ?? "https://localhost:7001"}/destination/view?id={packageId}";
+                    // Use AppUrl from config, or construct from request if in production
+                    var appUrl = app.Configuration["AppUrl"];
+                    if (string.IsNullOrWhiteSpace(appUrl))
+                    {
+                        // Fallback: construct from current request
+                        appUrl = $"{request.Scheme}://{request.Host}";
+                    }
+
+                    var viewerUrl = $"{appUrl}/destination/view?id={packageId}";
 
                     using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
                     {

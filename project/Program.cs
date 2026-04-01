@@ -198,16 +198,24 @@ namespace project
                 });
             });
 
-            // Debug endpoint to check if the route is working
-            app.MapGet("/test", () =>
+            // Debug endpoint to check configuration
+            app.MapGet("/test", (HttpContext context) =>
             {
                 var appUrl = app.Configuration["AppUrl"] ?? "Not set";
+                var environment = app.Environment.EnvironmentName;
+                var requestScheme = context.Request.Scheme;
+                var requestHost = context.Request.Host;
+
                 return Results.Json(new
                 {
                     status = "ok",
                     message = "Server is running",
-                    appUrl = appUrl,
-                    environment = app.Environment.EnvironmentName,
+                    environment = environment,
+                    appUrlFromConfig = appUrl,
+                    requestScheme = requestScheme,
+                    requestHost = requestHost.ToString(),
+                    reconstructedUrl = $"{requestScheme}://{requestHost}",
+                    qrCodeWillUse = string.IsNullOrWhiteSpace(appUrl) ? $"{requestScheme}://{requestHost}" : appUrl,
                     timestamp = DateTime.UtcNow
                 });
             });

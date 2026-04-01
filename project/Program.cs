@@ -20,21 +20,26 @@ namespace project
 
             // Add services to the container.
             builder.Services.AddRazorPages();
-            
-            // Add DbContext - uses PostgreSQL in production, SQL Server locally
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-            // Fall back to DATABASE_URL env var (Railway / Render / Heroku)
-            if (string.IsNullOrWhiteSpace(connectionString) || connectionString.Contains('#'))
-                connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+            // Add DbContext - uses PostgreSQL in production, SQL Server locally
+            // In production, prioritize DATABASE_URL environment variable (for Render, Railway, Heroku)
+            var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+            // Fall back to config if DATABASE_URL is not set
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            }
 
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new InvalidOperationException(
                     "No database connection string found. Set ConnectionStrings__DefaultConnection or DATABASE_URL.");
 
+            // Convert PostgreSQL URL format to Npgsql format if needed
             if (connectionString.StartsWith("postgresql://") || connectionString.StartsWith("postgres://"))
                 connectionString = ConvertPostgresUrlToNpgsql(connectionString);
 
+            // Use PostgreSQL for production or if connection string is already Npgsql format
             if (builder.Environment.IsProduction() || connectionString.StartsWith("Host="))
             {
                 builder.Services.AddDbContext<ApplicationDbContext>(options =>

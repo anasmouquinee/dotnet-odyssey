@@ -6,7 +6,6 @@ obj/
 *.suo
 *.userosscache
 *.sln.docstates
-project/appsettings.Production.json
 
 ## EF Core - keep migrations but ignore snapshots if needed
 # project/Migrations/

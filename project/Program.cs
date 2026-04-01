@@ -198,6 +198,20 @@ namespace project
                 });
             });
 
+            // Debug endpoint to check if the route is working
+            app.MapGet("/test", () =>
+            {
+                var appUrl = app.Configuration["AppUrl"] ?? "Not set";
+                return Results.Json(new
+                {
+                    status = "ok",
+                    message = "Server is running",
+                    appUrl = appUrl,
+                    environment = app.Environment.EnvironmentName,
+                    timestamp = DateTime.UtcNow
+                });
+            });
+
             app.MapStaticAssets();
             app.MapRazorPages()
                .WithStaticAssets();

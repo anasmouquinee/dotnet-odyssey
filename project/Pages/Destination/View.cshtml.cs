@@ -6,6 +6,8 @@ using project.Models;
 
 namespace project.Pages.Destination
 {
+    // This page is publicly accessible (no authentication required)
+    // Anyone scanning the QR code should be able to view destination details
     public class ViewPageModel : PageModel
     {
         private readonly ApplicationDbContext _db;
